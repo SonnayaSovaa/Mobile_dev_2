@@ -13,6 +13,8 @@ import androidx.core.view.WindowInsetsCompat;
 
 import ru.mirea.nagishevakv.movieproject.R;
 import ru.mirea.nagishevakv.movieproject.data.repository.MovieRepositoryImpl;
+import ru.mirea.nagishevakv.movieproject.data.storage.MovieStorage;
+import ru.mirea.nagishevakv.movieproject.data.storage.SharedPrefMovieStorage;
 import ru.mirea.nagishevakv.movieproject.domain.models.Movie;
 import ru.mirea.nagishevakv.movieproject.domain.repository.MovieRepository;
 import ru.mirea.nagishevakv.movieproject.domain.usecases.GetFavoriteFilmUseCase;
@@ -29,10 +31,13 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        MovieStorage sharedPrefMovieStorage = new SharedPrefMovieStorage(this);
+        MovieRepository movieRepository = new MovieRepositoryImpl(sharedPrefMovieStorage);
+
         EditText text = findViewById(R.id.te);
         TextView textView = findViewById(R.id.textView);
 
-        MovieRepository movieRepository = new MovieRepositoryImpl(this);
         findViewById(R.id.button_save).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
