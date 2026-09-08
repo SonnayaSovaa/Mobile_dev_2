@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
         EditText text = findViewById(R.id.te);
         TextView textView = findViewById(R.id.textView);
 
-        MovieRepository movieRepository = new MovieRepositoryImpl();
+        MovieRepository movieRepository = new MovieRepositoryImpl(this);
         findViewById(R.id.button_save).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -46,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Movie moview = new GetFavoriteFilmUseCase(movieRepository).execute();
-                textView.setText(String.format("Save result %s", moview.getName()));
+                textView.setText(String.format("Get result %s", moview.getName()));
             }
         });
     }
