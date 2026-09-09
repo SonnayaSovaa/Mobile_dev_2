@@ -4,11 +4,7 @@ plugins {
 
 android {
     namespace = "ru.mirea.nagishevakv.data"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26
@@ -33,6 +29,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":domain"))
     implementation(libs.appcompat)
     implementation(libs.material)
     testImplementation(libs.junit)

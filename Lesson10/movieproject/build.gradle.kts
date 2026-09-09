@@ -4,11 +4,7 @@ plugins {
 
 android {
     namespace = "ru.mirea.nagishevakv.movieproject"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "ru.mirea.nagishevakv.movieproject"
@@ -36,6 +32,9 @@ android {
 }
 
 dependencies {
+    implementation(project(":domain"))
+    implementation(project(":data"))
+    
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)

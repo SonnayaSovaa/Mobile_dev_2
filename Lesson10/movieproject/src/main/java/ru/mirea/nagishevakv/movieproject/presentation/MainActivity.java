@@ -11,14 +11,14 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import ru.mirea.nagishevakv.data.repository.MovieRepositoryImpl;
+import ru.mirea.nagishevakv.data.storage.MovieStorage;
+import ru.mirea.nagishevakv.data.storage.SharedPrefMovieStorage;
+import ru.mirea.nagishevakv.domain.models.Movie;
+import ru.mirea.nagishevakv.domain.repository.MovieRepository;
+import ru.mirea.nagishevakv.domain.usecases.GetFavoriteFilmUseCase;
+import ru.mirea.nagishevakv.domain.usecases.SaveFilmToFavoriteUseCase;
 import ru.mirea.nagishevakv.movieproject.R;
-import ru.mirea.nagishevakv.movieproject.data.repository.MovieRepositoryImpl;
-import ru.mirea.nagishevakv.movieproject.data.storage.MovieStorage;
-import ru.mirea.nagishevakv.movieproject.data.storage.SharedPrefMovieStorage;
-import ru.mirea.nagishevakv.movieproject.domain.models.Movie;
-import ru.mirea.nagishevakv.movieproject.domain.repository.MovieRepository;
-import ru.mirea.nagishevakv.movieproject.domain.usecases.GetFavoriteFilmUseCase;
-import ru.mirea.nagishevakv.movieproject.domain.usecases.SaveFilmToFavoriteUseCase;
 
 public class MainActivity extends AppCompatActivity {
     @Override
