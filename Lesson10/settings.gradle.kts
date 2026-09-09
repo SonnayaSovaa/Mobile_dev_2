@@ -25,3 +25,4 @@ dependencyResolutionManagement {
 rootProject.name = "Lesson10"
 include(":app")
 include(":movieproject")
+include(":data")
