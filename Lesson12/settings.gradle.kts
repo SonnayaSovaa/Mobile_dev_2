@@ -25,3 +25,4 @@ dependencyResolutionManagement {
 rootProject.name = "Lesson12"
 include(":app")
 include(":scrollviewapp")
+include(":listviewapp")
