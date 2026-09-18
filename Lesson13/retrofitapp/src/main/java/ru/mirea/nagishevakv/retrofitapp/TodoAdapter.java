@@ -8,6 +8,8 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.squareup.picasso.Picasso;
+
 import java.util.List;
 
 public class TodoAdapter extends RecyclerView.Adapter<TodoViewHolder> {
@@ -37,7 +39,6 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoViewHolder> {
         Todo todo = todos.get(position);
         holder.textViewTitle.setText(todo.getTitle());
 
-        // Unset listener to avoid triggering it when setting initial state
         holder.checkBoxCompleted.setOnCheckedChangeListener(null);
         holder.checkBoxCompleted.setChecked(todo.getCompleted());
 
@@ -46,6 +47,15 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoViewHolder> {
                 listener.onTodoChecked(todo, isChecked);
             }
         });
+
+        String imageUrl = "https://picsum.photos/200?random=" + todo.getId();
+        Picasso.get()
+                .load(imageUrl)
+                .placeholder(android.R.drawable.ic_menu_gallery)
+                .error(android.R.drawable.stat_notify_error)
+                .resize(150, 150)
+                .centerCrop()
+                .into(holder.imageView);
     }
 
     @Override
