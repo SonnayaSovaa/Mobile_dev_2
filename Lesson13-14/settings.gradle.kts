@@ -26,3 +26,4 @@ rootProject.name = "Lesson13"
 include(":app")
 include(":retrofitapp")
 include(":fragmentmanagerapp")
+include(":resultapifragmentapp")

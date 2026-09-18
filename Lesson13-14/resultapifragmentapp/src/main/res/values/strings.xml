@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">ResultApiFragmentApp</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="hint_enter_data">Enter data for bottom sheet</string>
+    <string name="btn_open_bottom_sheet">open bottom sheet</string>
+    <string name="content_description_logo">App Logo</string>
+</resources>
