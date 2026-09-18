@@ -39,30 +39,59 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         apiService = retrofit.create(ApiService.class);
+        
+        loadTodos();
+    }
+
+    private void loadTodos() {
         Call<List<Todo>> call = apiService.getTodos();
         call.enqueue(new Callback<List<Todo>>() {
             @Override
-            public void onResponse(Call<List<Todo>> call,
-                                   Response<List<Todo>> response) {
+            public void onResponse(Call<List<Todo>> call, Response<List<Todo>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     List<Todo> todos = response.body();
-                    todoAdapter = new TodoAdapter(MainActivity.this, todos);
+                    todoAdapter = new TodoAdapter(MainActivity.this, todos, (todo, isChecked) -> {
+                        todo.setCompleted(isChecked);
+                        updateTodo(todo);
+                    });
                     recyclerView.setAdapter(todoAdapter);
                 } else {
                     Log.e(TAG, "onResponse: " + response.code());
                 }
             }
+
             @Override
             public void onFailure(Call<List<Todo>> call, Throwable t) {
                 Log.e(TAG, "onFailure: " + t.getMessage());
+            }
+        });
+    }
+
+    private void updateTodo(Todo todo) {
+        apiService.updateTodo(todo.getId(), todo).enqueue(new Callback<Todo>() {
+            @Override
+            public void onResponse(Call<Todo> call, Response<Todo> response) {
+                if (response.isSuccessful()) {
+                    Toast.makeText(MainActivity.this, 
+                            "Updated: " + response.body().getTitle(),
+                            Toast.LENGTH_SHORT).show();
+                    Log.d(TAG, "Updated successfully: " + response.code());
+                } else {
+                    Log.e(TAG, "Update failed: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Todo> call, Throwable t) {
+                Log.e(TAG, "Update error: " + t.getMessage());
             }
         });
     }
