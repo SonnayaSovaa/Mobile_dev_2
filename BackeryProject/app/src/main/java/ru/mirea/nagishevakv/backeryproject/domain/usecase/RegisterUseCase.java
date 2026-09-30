@@ -11,6 +11,6 @@ public class RegisterUseCase {
     }
 
     public LiveData<Boolean> execute(String email, String password, String nickname) {
-        return repository.registerWithEmailAndPassword(email, password, nickname);
+        return repository.register(email, password, nickname);
     }
 }

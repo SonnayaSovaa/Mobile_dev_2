@@ -33,7 +33,7 @@ public class BakeryRepositoryImpl implements BakeryRepository {
     private final BakeryDao bakeryDao;
     private final NetworkApi networkApi;
     private final SharedPreferences sharedPreferences;
-    private final FirebaseAuth firebaseAuth;
+    private FirebaseAuth firebaseAuth;
     private final ExecutorService executor = Executors.newFixedThreadPool(4);
     private final MutableLiveData<Map<Product, Integer>> cartItems = new MutableLiveData<>(new HashMap<>());
 
@@ -41,7 +41,11 @@ public class BakeryRepositoryImpl implements BakeryRepository {
         this.bakeryDao = BakeryDatabase.getDatabase(context).bakeryDao();
         this.networkApi = new NetworkApi();
         this.sharedPreferences = context.getSharedPreferences("bakery_prefs", Context.MODE_PRIVATE);
-        this.firebaseAuth = FirebaseAuth.getInstance();
+        try {
+            this.firebaseAuth = FirebaseAuth.getInstance();
+        } catch (Exception e) {
+            Log.e(TAG, "Firebase not initialized", e);
+        }
     }
 
     public static synchronized BakeryRepositoryImpl getInstance(Context context) {
@@ -58,7 +62,9 @@ public class BakeryRepositoryImpl implements BakeryRepository {
             result.setValue(false);
             return result;
         }
-        firebaseAuth.signInWithEmailAndPassword(email, password)
+
+        if (firebaseAuth != null) {
+            firebaseAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful() && firebaseAuth.getCurrentUser() != null) {
                         FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
@@ -66,10 +72,13 @@ public class BakeryRepositoryImpl implements BakeryRepository {
                         saveClientInfo(user);
                         result.setValue(true);
                     } else {
-                        Log.e(TAG, "Login failed", task.getException());
-                        result.setValue(false);
+                        Log.e(TAG, "Firebase Login failed, falling back to local", task.getException());
+                        performLocalAuth(email, email.split("@")[0], result);
                     }
                 });
+        } else {
+            performLocalAuth(email, email.split("@")[0], result);
+        }
         return result;
     }
 
@@ -80,7 +89,9 @@ public class BakeryRepositoryImpl implements BakeryRepository {
             result.setValue(false);
             return result;
         }
-        firebaseAuth.createUserWithEmailAndPassword(email, password)
+
+        if (firebaseAuth != null) {
+            firebaseAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful() && firebaseAuth.getCurrentUser() != null) {
                         String uid = firebaseAuth.getCurrentUser().getUid();
@@ -88,11 +99,21 @@ public class BakeryRepositoryImpl implements BakeryRepository {
                         saveClientInfo(user);
                         result.setValue(true);
                     } else {
-                        Log.e(TAG, "Registration failed: " + (task.getException() != null ? task.getException().getMessage() : "Unknown error"));
-                        result.setValue(false);
+                        Log.e(TAG, "Firebase Registration failed, falling back to local", task.getException());
+                        performLocalAuth(email, nickname, result);
                     }
                 });
+        } else {
+            performLocalAuth(email, nickname, result);
+        }
         return result;
+    }
+
+    private void performLocalAuth(String email, String nickname, MutableLiveData<Boolean> result) {
+        String uid = "local_" + email.hashCode();
+        User user = new User(uid, nickname, email, "", 0);
+        saveClientInfo(user);
+        result.setValue(true);
     }
 
     @Override

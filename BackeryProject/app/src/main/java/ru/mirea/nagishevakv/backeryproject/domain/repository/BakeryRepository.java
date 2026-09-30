@@ -2,6 +2,7 @@ package ru.mirea.nagishevakv.backeryproject.domain.repository;
 
 import androidx.lifecycle.LiveData;
 import java.util.List;
+import java.util.Map;
 import ru.mirea.nagishevakv.backeryproject.domain.model.Category;
 import ru.mirea.nagishevakv.backeryproject.domain.model.Product;
 import ru.mirea.nagishevakv.backeryproject.domain.model.User;
@@ -9,26 +10,26 @@ import ru.mirea.nagishevakv.backeryproject.domain.model.Order;
 import ru.mirea.nagishevakv.backeryproject.domain.model.Comment;
 
 public interface BakeryRepository {
-    // Auth logic distributed/handled via Use Cases & Repositories
-    LiveData<Boolean> loginWithEmailAndPassword(String email, String password);
-    LiveData<Boolean> registerWithEmailAndPassword(String email, String password, String nickname);
+    // Auth logic
+    LiveData<Boolean> login(String email, String password);
+    LiveData<Boolean> register(String email, String password, String nickname);
     
-    // SharedPreferences & User Profile Client Info
+    // User Profile
     LiveData<User> getClientInfo();
     void saveClientInfo(User user);
     
-    // Catalog & Room / Network Api data via MediatorLiveData
+    // Data
     LiveData<List<Product>> getProducts();
     LiveData<List<Category>> getCategories();
-    LiveData<List<Comment>> getCommentsForProduct(int productId);
-    LiveData<List<Order>> getUserOrders(String userId);
+    LiveData<List<Comment>> getComments(int productId);
+    LiveData<List<Order>> getOrders();
     
-    // Cart operations
+    // Cart
     void addToCart(Product product);
     void removeFromCart(Product product);
     void clearCart();
-    LiveData<java.util.Map<Product, Integer>> getCartItems();
+    LiveData<Map<Product, Integer>> getCartItems();
     
-    // Order placements
+    // Order
     void createOrder(double cost, int itemCount);
 }

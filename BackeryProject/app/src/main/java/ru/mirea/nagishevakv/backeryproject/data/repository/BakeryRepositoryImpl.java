@@ -54,7 +54,7 @@ public class BakeryRepositoryImpl implements BakeryRepository {
     }
 
     @Override
-    public LiveData<Boolean> loginWithEmailAndPassword(String email, String password) {
+    public LiveData<Boolean> login(String email, String password) {
         MutableLiveData<Boolean> result = new MutableLiveData<>();
         if (email.contains("@") && password.length() >= 6) {
             sharedPreferences.edit()
@@ -70,7 +70,7 @@ public class BakeryRepositoryImpl implements BakeryRepository {
     }
 
     @Override
-    public LiveData<Boolean> registerWithEmailAndPassword(String email, String password, String nickname) {
+    public LiveData<Boolean> register(String email, String password, String nickname) {
         MutableLiveData<Boolean> result = new MutableLiveData<>();
         if (email.contains("@") && password.length() >= 6 && !nickname.isEmpty()) {
             sharedPreferences.edit()
@@ -161,7 +161,7 @@ public class BakeryRepositoryImpl implements BakeryRepository {
     }
 
     @Override
-    public LiveData<List<Comment>> getCommentsForProduct(int productId) {
+    public LiveData<List<Comment>> getComments(int productId) {
         MediatorLiveData<List<Comment>> mediator = new MediatorLiveData<>();
         mediator.addSource(bakeryDao.getCommentsForProduct(productId), entities -> {
             if (entities != null) {
@@ -176,7 +176,8 @@ public class BakeryRepositoryImpl implements BakeryRepository {
     }
 
     @Override
-    public LiveData<List<Order>> getUserOrders(String userId) {
+    public LiveData<List<Order>> getOrders() {
+        String userId = sharedPreferences.getString("client_id", "uid_guest");
         MediatorLiveData<List<Order>> mediator = new MediatorLiveData<>();
         mediator.addSource(bakeryDao.getOrdersForUser(userId), entities -> {
             if (entities != null) {

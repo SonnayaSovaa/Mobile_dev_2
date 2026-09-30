@@ -11,6 +11,6 @@ public class LoginUseCase {
     }
 
     public LiveData<Boolean> execute(String email, String password) {
-        return repository.loginWithEmailAndPassword(email, password);
+        return repository.login(email, password);
     }
 }

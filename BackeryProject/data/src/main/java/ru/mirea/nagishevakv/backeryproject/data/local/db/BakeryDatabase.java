@@ -13,7 +13,7 @@ import ru.mirea.nagishevakv.backeryproject.data.local.entity.OrderEntity;
 import ru.mirea.nagishevakv.backeryproject.data.local.entity.ProductEntity;
 import ru.mirea.nagishevakv.backeryproject.data.local.entity.UserEntity;
 
-@Database(entities = {CategoryEntity.class, CommentEntity.class, OrderEntity.class, ProductEntity.class, UserEntity.class}, version = 1)
+@Database(entities = {CategoryEntity.class, CommentEntity.class, OrderEntity.class, ProductEntity.class, UserEntity.class}, version = 2)
 public abstract class BakeryDatabase extends RoomDatabase {
     public abstract BakeryDao bakeryDao();
 
@@ -25,6 +25,7 @@ public abstract class BakeryDatabase extends RoomDatabase {
                 if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                                     BakeryDatabase.class, "bakery_database")
+                            .fallbackToDestructiveMigration()
                             .build();
                 }
             }
