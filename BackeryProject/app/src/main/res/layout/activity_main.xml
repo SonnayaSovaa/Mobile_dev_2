@@ -8,7 +8,6 @@
     android:background="@color/cream_bg"
     tools:context=".MainActivity">
 
-    <!-- Container for dynamic UI screens simulated in MainActivity using MVP/MVVM architectures -->
     <FrameLayout
         android:id="@+id/container"
         android:layout_width="match_parent"
@@ -18,60 +17,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Bottom Navigation simulation in warm tones -->
-    <LinearLayout
+    <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_navigation"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:orientation="horizontal"
-        android:background="@color/light_yellow"
+        android:layout_height="wrap_content"
+        android:background="@color/primary_warm"
+        app:itemIconTint="@color/accent_brown"
+        app:itemTextColor="@color/accent_brown"
+        app:menu="@menu/bottom_nav_menu"
+        app:labelVisibilityMode="unlabeled"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <Button
-            android:id="@+id/nav_catalog"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:text="Каталог"
-            android:textAllCaps="false"
-            android:textColor="@color/dark_brown"
-            android:backgroundTint="@color/light_yellow"
-            style="?android:attr/borderlessButtonStyle" />
-
-        <Button
-            android:id="@+id/nav_cart"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:text="Корзина"
-            android:textAllCaps="false"
-            android:textColor="@color/dark_brown"
-            android:backgroundTint="@color/light_yellow"
-            style="?android:attr/borderlessButtonStyle" />
-
-        <Button
-            android:id="@+id/nav_account"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:text="Аккаунт"
-            android:textAllCaps="false"
-            android:textColor="@color/dark_brown"
-            android:backgroundTint="@color/light_yellow"
-            style="?android:attr/borderlessButtonStyle" />
-
-        <Button
-            android:id="@+id/nav_about"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:text="Инфо"
-            android:textAllCaps="false"
-            android:textColor="@color/dark_brown"
-            android:backgroundTint="@color/light_yellow"
-            style="?android:attr/borderlessButtonStyle" />
-    </LinearLayout>
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -6,7 +6,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -16,7 +15,8 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.List;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+
 import java.util.Locale;
 import java.util.Map;
 
@@ -30,8 +30,7 @@ public class MainActivity extends AppCompatActivity {
 
     private BakeryViewModel viewModel;
     private FrameLayout container;
-    
-    private View navCatalog, navCart, navAccount, navAbout;
+    private BottomNavigationView bottomNavigation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,16 +39,25 @@ public class MainActivity extends AppCompatActivity {
 
         viewModel = new ViewModelProvider(this).get(BakeryViewModel.class);
         container = findViewById(R.id.container);
+        bottomNavigation = findViewById(R.id.bottom_navigation);
 
-        navCatalog = findViewById(R.id.nav_catalog);
-        navCart = findViewById(R.id.nav_cart);
-        navAccount = findViewById(R.id.nav_account);
-        navAbout = findViewById(R.id.nav_about);
-
-        navCatalog.setOnClickListener(v -> viewModel.navigateTo("CATALOG"));
-        navCart.setOnClickListener(v -> viewModel.navigateTo("CART"));
-        navAccount.setOnClickListener(v -> viewModel.navigateTo("ACCOUNT"));
-        navAbout.setOnClickListener(v -> viewModel.navigateTo("ABOUT"));
+        bottomNavigation.setOnItemSelectedListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.nav_catalog) {
+                viewModel.navigateTo("CATALOG");
+                return true;
+            } else if (id == R.id.nav_cart) {
+                viewModel.navigateTo("CART");
+                return true;
+            } else if (id == R.id.nav_account) {
+                viewModel.navigateTo("ACCOUNT");
+                return true;
+            } else if (id == R.id.nav_about) {
+                viewModel.navigateTo("ABOUT");
+                return true;
+            }
+            return false;
+        });
 
         viewModel.getCurrentScreen().observe(this, this::renderScreen);
     }
@@ -59,9 +67,6 @@ public class MainActivity extends AppCompatActivity {
         LayoutInflater inflater = LayoutInflater.from(this);
 
         switch (screen) {
-            case "AUTH":
-                setupAuthScreen(inflater);
-                break;
             case "CATALOG":
                 setupCatalogScreen(inflater);
                 break;
@@ -83,48 +88,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void setupAuthScreen(LayoutInflater inflater) {
-        View view = inflater.inflate(R.layout.screen_auth, container, false);
-        EditText etEmail = view.findViewById(R.id.et_email);
-        EditText etPassword = view.findViewById(R.id.et_password);
-        EditText etNickname = view.findViewById(R.id.et_nickname);
-        Button btnLogin = view.findViewById(R.id.btn_login);
-        Button btnRegister = view.findViewById(R.id.btn_register);
-
-        btnLogin.setOnClickListener(v -> {
-            String email = etEmail.getText().toString().trim();
-            String password = etPassword.getText().toString().trim();
-            viewModel.login(email, password).observe(this, success -> {
-                if (success) {
-                    Toast.makeText(this, "Успешный вход!", Toast.LENGTH_SHORT).show();
-                    viewModel.navigateTo("CATALOG");
-                } else {
-                    Toast.makeText(this, "Ошибка входа. Проверьте почту и пароль.", Toast.LENGTH_SHORT).show();
-                }
-            });
-        });
-
-        btnRegister.setOnClickListener(v -> {
-            String email = etEmail.getText().toString().trim();
-            String password = etPassword.getText().toString().trim();
-            String nickname = etNickname.getText().toString().trim();
-            viewModel.register(email, password, nickname).observe(this, success -> {
-                if (success) {
-                    Toast.makeText(this, "Регистрация успешна!", Toast.LENGTH_SHORT).show();
-                    viewModel.navigateTo("CATALOG");
-                } else {
-                    Toast.makeText(this, "Заполните все поля (пароль от 6 символов)", Toast.LENGTH_SHORT).show();
-                }
-            });
-        });
-
-        container.addView(view);
-    }
-
     private void setupCatalogScreen(LayoutInflater inflater) {
         View view = inflater.inflate(R.layout.screen_catalog, container, false);
         RecyclerView rvCatalog = view.findViewById(R.id.rv_catalog);
-        rvCatalog.setLayoutManager(new GridLayoutManager(this, 2));
+        
+        GridLayoutManager layoutManager = new GridLayoutManager(this, 2);
+        rvCatalog.setLayoutManager(layoutManager);
 
         CatalogAdapter adapter = new CatalogAdapter(new CatalogAdapter.OnProductClickListener() {
             @Override
@@ -142,11 +111,16 @@ public class MainActivity extends AppCompatActivity {
                 viewModel.removeFromCart(product);
             }
         });
-
+        
+        layoutManager.setSpanSizeLookup(adapter.getSpanSizeLookup(2));
         rvCatalog.setAdapter(adapter);
 
-        viewModel.getCartItems().observe(this, cartMap -> {
-            viewModel.getProducts().observe(this, products -> adapter.setProducts(products, cartMap));
+        viewModel.getCategories().observe(this, categories -> {
+            viewModel.getProducts().observe(this, products -> {
+                viewModel.getCartItems().observe(this, cartMap -> {
+                    adapter.setData(categories, products, cartMap);
+                });
+            });
         });
 
         container.addView(view);
@@ -233,13 +207,10 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
-            tvSummary.setText(String.format(Locale.getDefault(), "Товаров в корзине: %d | Итого: %.2f ₽", totalCount, totalPrice));
+            tvSummary.setText(String.format(Locale.getDefault(), "Товаров: %d | Итого: %.2f ₽", totalCount, totalPrice));
 
-            if (cartMap != null && cartMap.size() > 6) {
-                btnCheckoutBottom.setVisibility(View.VISIBLE);
-            } else {
-                btnCheckoutBottom.setVisibility(View.GONE);
-            }
+            int distinctCount = cartMap != null ? cartMap.size() : 0;
+            btnCheckoutBottom.setVisibility(distinctCount > 6 ? View.VISIBLE : View.GONE);
         });
 
         View.OnClickListener checkoutListener = v -> viewModel.navigateTo("ORDER");
@@ -259,32 +230,29 @@ public class MainActivity extends AppCompatActivity {
         OrderBillAdapter adapter = new OrderBillAdapter();
         rvOrderItems.setAdapter(adapter);
 
-        final int[] totalCountArr = {0};
-        final double[] totalPriceArr = {0.0};
-
         viewModel.getCartItems().observe(this, cartMap -> {
             adapter.setItems(cartMap);
-            int totalCount = 0;
             double totalPrice = 0.0;
             if (cartMap != null) {
                 for (Map.Entry<Product, Integer> entry : cartMap.entrySet()) {
-                    totalCount += entry.getValue();
                     totalPrice += entry.getKey().getPrice() * entry.getValue();
                 }
             }
-            totalCountArr[0] = totalCount;
-            totalPriceArr[0] = totalPrice;
             tvOrderTotal.setText(String.format(Locale.getDefault(), "Итого к оплате: %.2f ₽", totalPrice));
-        });
-
-        btnConfirm.setOnClickListener(v -> {
-            if (totalCountArr[0] == 0) {
-                Toast.makeText(this, "Ваша корзина пуста!", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            viewModel.checkout(totalPriceArr[0], totalCountArr[0]);
-            Toast.makeText(this, "Заказ успешно оформлен!", Toast.LENGTH_SHORT).show();
-            viewModel.navigateTo("ACCOUNT");
+            
+            double finalTotalPrice = totalPrice;
+            int totalCount = cartMap != null ? cartMap.values().stream().mapToInt(Integer::intValue).sum() : 0;
+            
+            btnConfirm.setOnClickListener(v -> {
+                if (totalCount == 0) {
+                    Toast.makeText(this, "Корзина пуста", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                viewModel.checkout(finalTotalPrice, totalCount);
+                Toast.makeText(this, "Заказ оформлен!", Toast.LENGTH_SHORT).show();
+                viewModel.clearCart();
+                viewModel.navigateTo("ACCOUNT");
+            });
         });
 
         container.addView(view);

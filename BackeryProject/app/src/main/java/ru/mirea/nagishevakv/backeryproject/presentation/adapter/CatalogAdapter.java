@@ -9,16 +9,23 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import ru.mirea.nagishevakv.backeryproject.R;
+import ru.mirea.nagishevakv.backeryproject.domain.model.Category;
 import ru.mirea.nagishevakv.backeryproject.domain.model.Product;
 
-public class CatalogAdapter extends RecyclerView.Adapter<CatalogAdapter.ProductViewHolder> {
+public class CatalogAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+
+    private static final int TYPE_HEADER = 0;
+    private static final int TYPE_PRODUCT = 1;
 
     public interface OnProductClickListener {
         void onProductClick(Product product);
@@ -26,7 +33,7 @@ public class CatalogAdapter extends RecyclerView.Adapter<CatalogAdapter.ProductV
         void onMinusClick(Product product);
     }
 
-    private final List<Product> products = new ArrayList<>();
+    private final List<Object> items = new ArrayList<>();
     private Map<Product, Integer> cartMap;
     private final OnProductClickListener listener;
 
@@ -34,31 +41,72 @@ public class CatalogAdapter extends RecyclerView.Adapter<CatalogAdapter.ProductV
         this.listener = listener;
     }
 
-    public void setProducts(List<Product> newProducts, Map<Product, Integer> cartMap) {
-        this.products.clear();
-        if (newProducts != null) {
-            this.products.addAll(newProducts);
-        }
+    public void setData(List<Category> categories, List<Product> products, Map<Product, Integer> cartMap) {
+        this.items.clear();
         this.cartMap = cartMap;
+        if (categories != null && products != null) {
+            for (Category category : categories) {
+                items.add(category);
+                List<Product> categoryProducts = products.stream()
+                        .filter(p -> p.getCategoryId() == category.getId())
+                        .collect(Collectors.toList());
+                items.addAll(categoryProducts);
+            }
+        }
         notifyDataSetChanged();
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        return items.get(position) instanceof Category ? TYPE_HEADER : TYPE_PRODUCT;
     }
 
     @NonNull
     @Override
-    public ProductViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_product, parent, false);
-        return new ProductViewHolder(view);
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        if (viewType == TYPE_HEADER) {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_category_header, parent, false);
+            return new HeaderViewHolder(view);
+        } else {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_product, parent, false);
+            return new ProductViewHolder(view);
+        }
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ProductViewHolder holder, int position) {
-        Product product = products.get(position);
-        holder.bind(product, cartMap, listener);
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+        if (holder instanceof HeaderViewHolder) {
+            ((HeaderViewHolder) holder).bind((Category) items.get(position));
+        } else {
+            ((ProductViewHolder) holder).bind((Product) items.get(position), cartMap, listener);
+        }
     }
 
     @Override
     public int getItemCount() {
-        return products.size();
+        return items.size();
+    }
+
+    public GridLayoutManager.SpanSizeLookup getSpanSizeLookup(int spanCount) {
+        return new GridLayoutManager.SpanSizeLookup() {
+            @Override
+            public int getSpanSize(int position) {
+                return getItemViewType(position) == TYPE_HEADER ? spanCount : 1;
+            }
+        };
+    }
+
+    static class HeaderViewHolder extends RecyclerView.ViewHolder {
+        private final TextView tvCategoryName;
+
+        public HeaderViewHolder(@NonNull View itemView) {
+            super(itemView);
+            tvCategoryName = itemView.findViewById(R.id.tv_category_name);
+        }
+
+        public void bind(Category category) {
+            tvCategoryName.setText(category.getName());
+        }
     }
 
     static class ProductViewHolder extends RecyclerView.ViewHolder {

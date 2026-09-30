@@ -56,7 +56,6 @@ public class BakeryRepositoryImpl implements BakeryRepository {
     @Override
     public LiveData<Boolean> loginWithEmailAndPassword(String email, String password) {
         MutableLiveData<Boolean> result = new MutableLiveData<>();
-        // Mock Firebase Auth - Logics distributed across modules/layers
         if (email.contains("@") && password.length() >= 6) {
             sharedPreferences.edit()
                     .putString("client_email", email)
@@ -96,7 +95,7 @@ public class BakeryRepositoryImpl implements BakeryRepository {
         String id = sharedPreferences.getString("client_id", "uid_guest");
         String email = sharedPreferences.getString("client_email", "guest@bakery.com");
         String nickname = sharedPreferences.getString("client_nickname", "Гость");
-        int orderCount = sharedPreferences.getInt("client_order_count", 3); // mock initial order count
+        int orderCount = sharedPreferences.getInt("client_order_count", 3);
         result.setValue(new User(id, nickname, email, "", orderCount));
         return result;
     }
@@ -114,8 +113,6 @@ public class BakeryRepositoryImpl implements BakeryRepository {
     @Override
     public LiveData<List<Product>> getProducts() {
         MediatorLiveData<List<Product>> mediator = new MediatorLiveData<>();
-        
-        // Use MediatorLiveData to combine/fetch from Room DB and fetch from Mock Network API
         LiveData<List<ProductEntity>> dbSource = bakeryDao.getAllProducts();
         LiveData<List<ProductEntity>> netSource = networkApi.getMockProducts();
 
@@ -166,15 +163,6 @@ public class BakeryRepositoryImpl implements BakeryRepository {
     @Override
     public LiveData<List<Comment>> getCommentsForProduct(int productId) {
         MediatorLiveData<List<Comment>> mediator = new MediatorLiveData<>();
-        
-        // Seed default comments if empty
-        executor.execute(() -> {
-            List<CommentEntity> mockComments = new ArrayList<>();
-            mockComments.add(new CommentEntity(1, "Очень вкусно и свежо!", "uid_1", 1));
-            mockComments.add(new CommentEntity(2, "Слишком сладко, но к кофе супер", "uid_2", 2));
-            bakeryDao.insertComments(mockComments);
-        });
-
         mediator.addSource(bakeryDao.getCommentsForProduct(productId), entities -> {
             if (entities != null) {
                 List<Comment> list = new ArrayList<>();
@@ -204,7 +192,6 @@ public class BakeryRepositoryImpl implements BakeryRepository {
 
     @Override
     public void addToCart(Product product) {
-        // Find existing key by ID to avoid reference mismatches
         Product existingKey = null;
         for (Product p : cartMap.keySet()) {
             if (p.getId() == product.getId()) {
@@ -252,7 +239,7 @@ public class BakeryRepositoryImpl implements BakeryRepository {
     }
 
     @Override
-    public void placeOrder(double cost, int itemCount) {
+    public void createOrder(double cost, int itemCount) {
         String userId = sharedPreferences.getString("client_id", "uid_guest");
         int currentOrders = sharedPreferences.getInt("client_order_count", 0);
         sharedPreferences.edit().putInt("client_order_count", currentOrders + 1).apply();

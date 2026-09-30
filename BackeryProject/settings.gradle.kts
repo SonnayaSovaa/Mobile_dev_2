@@ -25,3 +25,4 @@ dependencyResolutionManagement {
 rootProject.name = "BackeryProject"
 include(":app")
 include(":domain")
+include(":data")

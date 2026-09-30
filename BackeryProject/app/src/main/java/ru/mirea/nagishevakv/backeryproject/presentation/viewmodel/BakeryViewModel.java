@@ -63,5 +63,5 @@ public class BakeryViewModel extends AndroidViewModel {
     public void addToCart(Product product) { manageCartUseCase.add(product); }
     public void removeFromCart(Product product) { manageCartUseCase.remove(product); }
     public void clearCart() { manageCartUseCase.clear(); }
-    public void checkout(double cost, int itemCount) { repository.placeOrder(cost, itemCount); }
+    public void checkout(double cost, int itemCount) { repository.createOrder(cost, itemCount); }
 }
