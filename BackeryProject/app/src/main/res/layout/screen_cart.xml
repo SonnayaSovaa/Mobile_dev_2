@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/cream_bg"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/tv_cart_summary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Товаров в корзине: 0 | Итого: 0 ₽"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@color/dark_brown"
+        android:gravity="center"
+        android:layout_marginBottom="12dp"/>
+
+    <Button
+        android:id="@+id/btn_checkout_top"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:text="Перейти к оформлению"
+        android:textColor="@color/white"
+        android:backgroundTint="@color/dark_brown"
+        android:layout_marginBottom="8dp"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_cart"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"/>
+
+    <Button
+        android:id="@+id/btn_checkout_bottom"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:text="Перейти к оформлению (снизу)"
+        android:textColor="@color/white"
+        android:backgroundTint="@color/dark_brown"
+        android:layout_marginTop="8dp"
+        android:visibility="gone"/>
+</LinearLayout>

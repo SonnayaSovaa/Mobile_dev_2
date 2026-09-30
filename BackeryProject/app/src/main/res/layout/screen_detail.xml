@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/cream_bg">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <ImageView
+            android:id="@+id/iv_detail_photo"
+            android:layout_width="match_parent"
+            android:layout_height="240dp"
+            android:scaleType="centerCrop"
+            android:src="@android:drawable/ic_menu_report_image"
+            android:background="@color/light_yellow" />
+
+        <TextView
+            android:id="@+id/tv_detail_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Название товара"
+            android:textColor="@color/dark_brown"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_detail_category"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Категория: Круассаны"
+            android:textColor="@color/light_brown"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/tv_detail_weight"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Вес/Объём: 80 грамм"
+            android:textColor="@color/gray_text"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/tv_detail_price"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="150 ₽"
+            android:textColor="@color/warm_orange"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_detail_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Описание товара будет отображаться здесь во всех подробностях."
+            android:textColor="@color/dark_brown"
+            android:textSize="16sp"
+            android:lineSpacingMultiplier="1.2" />
+
+        <Button
+            android:id="@+id/btn_detail_add"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_marginTop="24dp"
+            android:text="Добавить в корзину"
+            android:textColor="@color/white"
+            android:backgroundTint="@color/dark_brown" />
+
+        <Button
+            android:id="@+id/btn_detail_back"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_marginTop="12dp"
+            android:text="Назад в каталог"
+            android:textColor="@color/dark_brown"
+            android:backgroundTint="@color/light_yellow"
+            style="?android:attr/borderlessButtonStyle"/>
+    </LinearLayout>
+</ScrollView>
