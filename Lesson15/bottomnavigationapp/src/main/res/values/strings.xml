@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">BottomNavigationApp</string>
+    <string name="title_home">Главная</string>
+    <string name="title_info">Инфо</string>
+    <string name="title_profile">Профиль</string>
+    <string name="title_settings">Настройки</string>
 </resources>
