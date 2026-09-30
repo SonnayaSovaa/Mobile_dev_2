@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">NavigationDrawerApp</string>
+    <string name="title_home">Главная</string>
+    <string name="title_info">Инфо</string>
+    <string name="title_profile">Профиль</string>
+    <string name="title_settings">Настройки</string>
+    <string name="navigation_drawer_open">Открыть шторку</string>
+    <string name="navigation_drawer_close">Закрыть шторку</string>
+</resources>

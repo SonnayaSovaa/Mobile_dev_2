@@ -25,3 +25,4 @@ dependencyResolutionManagement {
 rootProject.name = "Lesson15"
 include(":app")
 include(":bottomnavigationapp")
+include(":navigationdrawerapp")
