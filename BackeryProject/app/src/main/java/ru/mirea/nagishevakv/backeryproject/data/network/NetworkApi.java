@@ -27,6 +27,7 @@ public class NetworkApi {
         list.add(new CategoryEntity(1, "Круассаны"));
         list.add(new CategoryEntity(2, "Холодные напитки"));
         list.add(new CategoryEntity(3, "Пончики"));
+        list.add(new CategoryEntity(4, "Хлеб"));
         data.postValue(list);
         return data;
     }
@@ -41,6 +42,9 @@ public class NetworkApi {
         list.add(new ProductEntity(5, "Клубничный донат", 3, 85, "граммы", "Яркий пончик с клубничным вкусом", 130.0, ""));
         list.add(new ProductEntity(6, "Лимонад Цитрус", 2, 400, "миллилитры", "Натуральный лимонад с лимоном и апельсином", 200.0, ""));
         list.add(new ProductEntity(7, "Карамельный пончик", 3, 90, "граммы", "Пончик с мягкой карамелью внутри", 140.0, ""));
+        list.add(new ProductEntity(8, "Багет французский", 4, 250, "граммы", "Традиционный пшеничный багет с хрустящей корочкой", 95.0, ""));
+        list.add(new ProductEntity(9, "Бородинский хлеб", 4, 400, "граммы", "Ржаной хлеб с кориандром", 80.0, ""));
+        list.add(new ProductEntity(10, "Смузи малина", 2, 300, "миллилитры", "Густой напиток из свежей малины", 250.0, ""));
         data.postValue(list);
         return data;
     }

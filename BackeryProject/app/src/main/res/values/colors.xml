@@ -11,6 +11,10 @@
     <color name="cream_bg">#FFFDF7</color>
     <color name="text_main">#3E2723</color>
 
+    <!-- Selection Colors -->
+    <color name="nav_selected_orange">#E65100</color> <!-- Darker yellow-orange -->
+    <color name="nav_indicator_orange">#FFE0B2</color>
+
     <!-- Added missing colors to fix build errors -->
     <color name="dark_brown">#5D4037</color>
     <color name="light_brown">#D7CCC8</color>

@@ -7,8 +7,6 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.google.firebase.auth.FirebaseAuthException;
-
 import ru.mirea.nagishevakv.backeryproject.MainActivity;
 import ru.mirea.nagishevakv.backeryproject.databinding.ActivityAuthBinding;
 import ru.mirea.nagishevakv.backeryproject.presentation.viewmodel.BakeryViewModel;
@@ -62,7 +60,6 @@ public class AuthActivity extends AppCompatActivity {
                     Toast.makeText(this, "Регистрация успешна!", Toast.LENGTH_SHORT).show();
                     navigateToMain();
                 } else {
-                    // В реальном приложении здесь лучше передавать текст ошибки через LiveData
                     Toast.makeText(this, "Ошибка регистрации. Проверьте корректность Email или подключение", Toast.LENGTH_LONG).show();
                 }
             });
@@ -71,6 +68,7 @@ public class AuthActivity extends AppCompatActivity {
 
     private void navigateToMain() {
         Intent intent = new Intent(AuthActivity.this, MainActivity.class);
+        intent.putExtra("GOTO_CATALOG", true);
         startActivity(intent);
         finish();
     }

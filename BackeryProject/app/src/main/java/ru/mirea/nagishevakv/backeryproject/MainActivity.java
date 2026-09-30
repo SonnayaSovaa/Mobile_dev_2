@@ -17,9 +17,11 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import ru.mirea.nagishevakv.backeryproject.domain.model.Category;
 import ru.mirea.nagishevakv.backeryproject.domain.model.Product;
 import ru.mirea.nagishevakv.backeryproject.presentation.adapter.CartAdapter;
 import ru.mirea.nagishevakv.backeryproject.presentation.adapter.CatalogAdapter;
@@ -60,6 +62,12 @@ public class MainActivity extends AppCompatActivity {
         });
 
         viewModel.getCurrentScreen().observe(this, this::renderScreen);
+        
+        // Ensure catalog is selected if navigated from Auth
+        if (getIntent().getBooleanExtra("GOTO_CATALOG", false)) {
+            viewModel.navigateTo("CATALOG");
+            bottomNavigation.setSelectedItemId(R.id.nav_catalog);
+        }
     }
 
     private void renderScreen(String screen) {
@@ -158,7 +166,21 @@ public class MainActivity extends AppCompatActivity {
         viewModel.getSelectedProduct().observe(this, product -> {
             if (product != null) {
                 tvName.setText(product.getName());
-                tvCategory.setText(String.format(Locale.getDefault(), "Категория ID: %d", product.getCategoryId()));
+                
+                // Show category name instead of ID
+                viewModel.getCategories().observe(this, categories -> {
+                    String categoryName = "Неизвестно";
+                    if (categories != null) {
+                        for (Category c : categories) {
+                            if (c.getId() == product.getCategoryId()) {
+                                categoryName = c.getName();
+                                break;
+                            }
+                        }
+                    }
+                    tvCategory.setText(String.format(Locale.getDefault(), "Категория: %s", categoryName));
+                });
+
                 tvWeight.setText(String.format(Locale.getDefault(), "Вес/Объём: %.0f %s", product.getWeightOrVolume(), product.getUnit()));
                 tvPrice.setText(String.format(Locale.getDefault(), "%.2f ₽", product.getPrice()));
                 tvDescription.setText(product.getDescription());

@@ -12,7 +12,7 @@ import ru.mirea.nagishevakv.backeryproject.data.local.entity.OrderEntity;
 import ru.mirea.nagishevakv.backeryproject.data.local.entity.ProductEntity;
 import ru.mirea.nagishevakv.backeryproject.data.local.entity.UserEntity;
 
-@Database(entities = {CategoryEntity.class, ProductEntity.class, UserEntity.class, CommentEntity.class, OrderEntity.class}, version = 2, exportSchema = false)
+@Database(entities = {CategoryEntity.class, ProductEntity.class, UserEntity.class, CommentEntity.class, OrderEntity.class}, version = 3, exportSchema = false)
 public abstract class BakeryDatabase extends RoomDatabase {
     private static volatile BakeryDatabase INSTANCE;
 

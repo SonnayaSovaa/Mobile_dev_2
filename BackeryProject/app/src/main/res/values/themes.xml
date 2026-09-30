@@ -2,8 +2,14 @@
     <!-- Base application theme. -->
     <style name="Base.Theme.BackeryProject" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="colorPrimary">@color/nav_selected_orange</item>
+        <item name="colorSecondary">@color/warm_orange</item>
+        <item name="android:windowBackground">@color/cream_bg</item>
     </style>
 
     <style name="Theme.BackeryProject" parent="Base.Theme.BackeryProject" />
+
+    <style name="App.CustomIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">@color/nav_indicator_orange</item>
+    </style>
 </resources>
