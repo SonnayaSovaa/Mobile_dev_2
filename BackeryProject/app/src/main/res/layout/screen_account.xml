@@ -16,41 +16,96 @@
         android:background="@color/light_yellow"
         android:padding="8dp"/>
 
-    <TextView
-        android:id="@+id/tv_nickname"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Никнейм"
-        android:textSize="22sp"
-        android:textStyle="bold"
-        android:textColor="@color/dark_brown"
-        android:layout_marginTop="16dp"/>
-
-    <TextView
-        android:id="@+id/tv_email"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="user@bakery.com"
-        android:textSize="16sp"
-        android:textColor="@color/gray_text"
-        android:layout_marginTop="4dp"/>
-
-    <TextView
-        android:id="@+id/tv_order_count"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Количество заказов: 0"
-        android:textSize="16sp"
-        android:textColor="@color/dark_brown"
-        android:layout_marginTop="16dp"
-        android:textStyle="italic"/>
-
-    <Button
-        android:id="@+id/btn_go_to_cart"
+    <!-- Authorized view -->
+    <LinearLayout
+        android:id="@+id/layout_authorized"
         android:layout_width="match_parent"
-        android:layout_height="54dp"
-        android:text="Перейти в корзину"
-        android:textColor="@color/white"
-        android:backgroundTint="@color/dark_brown"
-        android:layout_marginTop="32dp"/>
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:id="@+id/tv_nickname"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Никнейм"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="@color/dark_brown"
+            android:layout_marginTop="16dp"/>
+
+        <TextView
+            android:id="@+id/tv_email"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="user@bakery.com"
+            android:textSize="16sp"
+            android:textColor="@color/gray_text"
+            android:layout_marginTop="4dp"/>
+
+        <TextView
+            android:id="@+id/tv_order_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Количество заказов: 0"
+            android:textSize="16sp"
+            android:textColor="@color/dark_brown"
+            android:layout_marginTop="16dp"
+            android:textStyle="italic"/>
+
+        <Button
+            android:id="@+id/btn_go_to_cart"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:text="Перейти в корзину"
+            android:textColor="@color/white"
+            android:backgroundTint="@color/dark_brown"
+            android:layout_marginTop="32dp"/>
+
+        <Button
+            android:id="@+id/btn_logout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Выйти из аккаунта"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:textColor="@color/accent_brown"
+            android:layout_marginTop="8dp"/>
+    </LinearLayout>
+
+    <!-- Guest view -->
+    <LinearLayout
+        android:id="@+id/layout_guest"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Вы вошли как гость"
+            android:textSize="20sp"
+            android:textColor="@color/dark_brown"
+            android:layout_marginTop="16dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Чтобы совершать покупки, необходимо авторизоваться"
+            android:textSize="16sp"
+            android:textColor="@color/gray_text"
+            android:layout_marginTop="16dp"
+            android:gravity="center"/>
+
+        <Button
+            android:id="@+id/btn_login_account"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:text="Войти в аккаунт"
+            android:textColor="@color/white"
+            android:backgroundTint="@color/dark_brown"
+            android:layout_marginTop="32dp"/>
+    </LinearLayout>
+
 </LinearLayout>

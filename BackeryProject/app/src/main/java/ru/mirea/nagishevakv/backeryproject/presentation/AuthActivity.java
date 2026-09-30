@@ -64,6 +64,11 @@ public class AuthActivity extends AppCompatActivity {
                 }
             });
         });
+
+        binding.btnGuest.setOnClickListener(v -> {
+            viewModel.loginAsGuest();
+            navigateToMain();
+        });
     }
 
     private void navigateToMain() {

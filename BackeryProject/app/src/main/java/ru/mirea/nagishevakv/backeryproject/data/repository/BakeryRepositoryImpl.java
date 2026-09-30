@@ -90,6 +90,18 @@ public class BakeryRepositoryImpl implements BakeryRepository {
     }
 
     @Override
+    public void logout() {
+        sharedPreferences.edit().clear().apply();
+        clearCart();
+    }
+
+    @Override
+    public boolean isAuthorized() {
+        String id = sharedPreferences.getString("client_id", "");
+        return !id.isEmpty() && !id.startsWith("guest_");
+    }
+
+    @Override
     public LiveData<User> getClientInfo() {
         MutableLiveData<User> result = new MutableLiveData<>();
         String id = sharedPreferences.getString("client_id", "uid_guest");

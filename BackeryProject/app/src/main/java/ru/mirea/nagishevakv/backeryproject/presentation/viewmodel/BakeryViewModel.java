@@ -51,6 +51,20 @@ public class BakeryViewModel extends AndroidViewModel {
         return loginUseCase.execute(email, password);
     }
 
+    public void loginAsGuest() {
+        User guest = new User("guest_" + System.currentTimeMillis(), "Гость", "", "", 0);
+        repository.saveClientInfo(guest);
+    }
+
+    public boolean isAuthorized() {
+        return repository.isAuthorized();
+    }
+
+    public void logout() {
+        repository.logout();
+        navigateTo("AUTH");
+    }
+
     public LiveData<Boolean> register(String email, String password, String nickname) {
         return registerUseCase.execute(email, password, nickname);
     }

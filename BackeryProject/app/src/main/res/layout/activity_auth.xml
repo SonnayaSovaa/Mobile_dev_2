@@ -59,4 +59,14 @@
         app:layout_constraintTop_toBottomOf="@id/btn_login"
         android:layout_marginTop="8dp"/>
 
+    <Button
+        android:id="@+id/btn_guest"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Войти как гость"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:textColor="@color/accent_brown"
+        app:layout_constraintTop_toBottomOf="@id/btn_register"
+        android:layout_marginTop="16dp"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

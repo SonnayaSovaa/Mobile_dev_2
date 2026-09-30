@@ -13,6 +13,8 @@ public interface BakeryRepository {
     // Auth logic
     LiveData<Boolean> login(String email, String password);
     LiveData<Boolean> register(String email, String password, String nickname);
+    void logout();
+    boolean isAuthorized();
     
     // User Profile
     LiveData<User> getClientInfo();

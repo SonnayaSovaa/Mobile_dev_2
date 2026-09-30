@@ -1,11 +1,13 @@
 package ru.mirea.nagishevakv.backeryproject;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,6 +25,7 @@ import java.util.Map;
 
 import ru.mirea.nagishevakv.backeryproject.domain.model.Category;
 import ru.mirea.nagishevakv.backeryproject.domain.model.Product;
+import ru.mirea.nagishevakv.backeryproject.presentation.AuthActivity;
 import ru.mirea.nagishevakv.backeryproject.presentation.adapter.CartAdapter;
 import ru.mirea.nagishevakv.backeryproject.presentation.adapter.CatalogAdapter;
 import ru.mirea.nagishevakv.backeryproject.presentation.adapter.OrderBillAdapter;
@@ -43,14 +46,21 @@ public class MainActivity extends AppCompatActivity {
         container = findViewById(R.id.container);
         bottomNavigation = findViewById(R.id.bottom_navigation);
 
+        updateBottomNavigationVisibility();
+
         bottomNavigation.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
             if (id == R.id.nav_catalog) {
                 viewModel.navigateTo("CATALOG");
                 return true;
             } else if (id == R.id.nav_cart) {
-                viewModel.navigateTo("CART");
-                return true;
+                if (viewModel.isAuthorized()) {
+                    viewModel.navigateTo("CART");
+                    return true;
+                } else {
+                    Toast.makeText(this, "Войдите, чтобы пользоваться корзиной", Toast.LENGTH_SHORT).show();
+                    return false;
+                }
             } else if (id == R.id.nav_account) {
                 viewModel.navigateTo("ACCOUNT");
                 return true;
@@ -63,11 +73,15 @@ public class MainActivity extends AppCompatActivity {
 
         viewModel.getCurrentScreen().observe(this, this::renderScreen);
         
-        // Ensure catalog is selected if navigated from Auth
         if (getIntent().getBooleanExtra("GOTO_CATALOG", false)) {
             viewModel.navigateTo("CATALOG");
             bottomNavigation.setSelectedItemId(R.id.nav_catalog);
         }
+    }
+
+    private void updateBottomNavigationVisibility() {
+        Menu menu = bottomNavigation.getMenu();
+        menu.findItem(R.id.nav_cart).setVisible(viewModel.isAuthorized());
     }
 
     private void renderScreen(String screen) {
@@ -93,6 +107,10 @@ public class MainActivity extends AppCompatActivity {
             case "ABOUT":
                 setupAboutScreen(inflater);
                 break;
+            case "AUTH":
+                startActivity(new Intent(this, AuthActivity.class));
+                finish();
+                break;
         }
     }
 
@@ -111,7 +129,11 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onAddClick(Product product) {
-                viewModel.addToCart(product);
+                if (viewModel.isAuthorized()) {
+                    viewModel.addToCart(product);
+                } else {
+                    Toast.makeText(MainActivity.this, "Чтобы совершать покупки необходимо авторизоваться", Toast.LENGTH_SHORT).show();
+                }
             }
 
             @Override
@@ -136,20 +158,40 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupAccountScreen(LayoutInflater inflater) {
         View view = inflater.inflate(R.layout.screen_account, container, false);
-        TextView tvNickname = view.findViewById(R.id.tv_nickname);
-        TextView tvEmail = view.findViewById(R.id.tv_email);
-        TextView tvOrderCount = view.findViewById(R.id.tv_order_count);
-        Button btnGoToCart = view.findViewById(R.id.btn_go_to_cart);
+        
+        LinearLayout layoutAuthorized = view.findViewById(R.id.layout_authorized);
+        LinearLayout layoutGuest = view.findViewById(R.id.layout_guest);
+        
+        if (viewModel.isAuthorized()) {
+            layoutAuthorized.setVisibility(View.VISIBLE);
+            layoutGuest.setVisibility(View.GONE);
+            
+            TextView tvNickname = view.findViewById(R.id.tv_nickname);
+            TextView tvEmail = view.findViewById(R.id.tv_email);
+            TextView tvOrderCount = view.findViewById(R.id.tv_order_count);
+            Button btnGoToCart = view.findViewById(R.id.btn_go_to_cart);
+            Button btnLogout = view.findViewById(R.id.btn_logout);
 
-        viewModel.getClientInfo().observe(this, user -> {
-            if (user != null) {
-                tvNickname.setText(user.getNickname());
-                tvEmail.setText(user.getEmail());
-                tvOrderCount.setText(String.format(Locale.getDefault(), "Количество заказов: %d", user.getOrderCount()));
-            }
-        });
+            viewModel.getClientInfo().observe(this, user -> {
+                if (user != null) {
+                    tvNickname.setText(user.getNickname());
+                    tvEmail.setText(user.getEmail());
+                    tvOrderCount.setText(String.format(Locale.getDefault(), "Количество заказов: %d", user.getOrderCount()));
+                }
+            });
 
-        btnGoToCart.setOnClickListener(v -> viewModel.navigateTo("CART"));
+            btnGoToCart.setOnClickListener(v -> viewModel.navigateTo("CART"));
+            btnLogout.setOnClickListener(v -> viewModel.logout());
+        } else {
+            layoutAuthorized.setVisibility(View.GONE);
+            layoutGuest.setVisibility(View.VISIBLE);
+            
+            Button btnLoginAccount = view.findViewById(R.id.btn_login_account);
+            btnLoginAccount.setOnClickListener(v -> {
+                viewModel.logout(); // Clears guest info
+            });
+        }
+
         container.addView(view);
     }
 
@@ -167,7 +209,6 @@ public class MainActivity extends AppCompatActivity {
             if (product != null) {
                 tvName.setText(product.getName());
                 
-                // Show category name instead of ID
                 viewModel.getCategories().observe(this, categories -> {
                     String categoryName = "Неизвестно";
                     if (categories != null) {
@@ -186,8 +227,12 @@ public class MainActivity extends AppCompatActivity {
                 tvDescription.setText(product.getDescription());
 
                 btnAdd.setOnClickListener(v -> {
-                    viewModel.addToCart(product);
-                    Toast.makeText(this, "Добавлено в корзину!", Toast.LENGTH_SHORT).show();
+                    if (viewModel.isAuthorized()) {
+                        viewModel.addToCart(product);
+                        Toast.makeText(this, "Добавлено в корзину!", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(this, "Чтобы совершать покупки необходимо авторизоваться", Toast.LENGTH_SHORT).show();
+                    }
                 });
             }
         });

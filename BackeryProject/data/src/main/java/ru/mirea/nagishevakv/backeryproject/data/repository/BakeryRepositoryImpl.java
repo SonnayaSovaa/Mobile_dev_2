@@ -117,6 +117,19 @@ public class BakeryRepositoryImpl implements BakeryRepository {
     }
 
     @Override
+    public void logout() {
+        if (firebaseAuth != null) firebaseAuth.signOut();
+        sharedPreferences.edit().clear().apply();
+        clearCart();
+    }
+
+    @Override
+    public boolean isAuthorized() {
+        String id = sharedPreferences.getString("user_id", "");
+        return !id.isEmpty() && !id.startsWith("guest_");
+    }
+
+    @Override
     public LiveData<User> getClientInfo() {
         MutableLiveData<User> data = new MutableLiveData<>();
         String id = sharedPreferences.getString("user_id", "");
@@ -133,13 +146,15 @@ public class BakeryRepositoryImpl implements BakeryRepository {
                 .putString("user_name", user.getNickname())
                 .putString("user_email", user.getEmail())
                 .apply();
-        executor.execute(() -> {
-            try {
-                bakeryDao.insertUser(new UserEntity(user.getId(), user.getNickname(), user.getEmail(), "", 0));
-            } catch (Exception e) {
-                Log.e(TAG, "Error saving user to DB", e);
-            }
-        });
+        if (!user.getId().startsWith("guest_")) {
+            executor.execute(() -> {
+                try {
+                    bakeryDao.insertUser(new UserEntity(user.getId(), user.getNickname(), user.getEmail(), "", 0));
+                } catch (Exception e) {
+                    Log.e(TAG, "Error saving user to DB", e);
+                }
+            });
+        }
     }
 
     @Override
