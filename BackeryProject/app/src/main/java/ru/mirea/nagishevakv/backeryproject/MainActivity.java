@@ -5,9 +5,11 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -61,6 +63,9 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(this, "Войдите, чтобы пользоваться корзиной", Toast.LENGTH_SHORT).show();
                     return false;
                 }
+            } else if (id == R.id.nav_weather) {
+                viewModel.navigateTo("WEATHER");
+                return true;
             } else if (id == R.id.nav_account) {
                 viewModel.navigateTo("ACCOUNT");
                 return true;
@@ -92,6 +97,9 @@ public class MainActivity extends AppCompatActivity {
             case "CATALOG":
                 setupCatalogScreen(inflater);
                 break;
+            case "WEATHER":
+                setupWeatherScreen(inflater);
+                break;
             case "ACCOUNT":
                 setupAccountScreen(inflater);
                 break;
@@ -112,6 +120,22 @@ public class MainActivity extends AppCompatActivity {
                 finish();
                 break;
         }
+    }
+
+    private void setupWeatherScreen(LayoutInflater inflater) {
+        View view = inflater.inflate(R.layout.screen_weather, container, false);
+        Spinner spinner = view.findViewById(R.id.spinner_cities);
+        Button btn = view.findViewById(R.id.btn_get_weather);
+        TextView tvResult = view.findViewById(R.id.tv_weather_result);
+
+        String[] cities = {"Moscow", "London", "Paris", "Berlin", "Tokyo", "New York", "Dubai"};
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, cities);
+        spinner.setAdapter(adapter);
+
+        btn.setOnClickListener(v -> viewModel.fetchWeather(spinner.getSelectedItem().toString()));
+        viewModel.getWeatherData().observe(this, tvResult::setText);
+
+        container.addView(view);
     }
 
     private void setupCatalogScreen(LayoutInflater inflater) {

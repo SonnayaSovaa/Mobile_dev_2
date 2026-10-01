@@ -25,4 +25,8 @@ dependencies {
     implementation(libs.lifecycle.livedata)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
+    
+    // Retrofit for Weather API
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
 }

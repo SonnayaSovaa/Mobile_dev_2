@@ -8,7 +8,15 @@ import androidx.lifecycle.MutableLiveData;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+import ru.mirea.nagishevakv.backeryproject.data.network.weather.WeatherApi;
+import ru.mirea.nagishevakv.backeryproject.data.network.weather.WeatherResponse;
 import ru.mirea.nagishevakv.backeryproject.data.repository.BakeryRepositoryImpl;
 import ru.mirea.nagishevakv.backeryproject.domain.model.Category;
 import ru.mirea.nagishevakv.backeryproject.domain.model.Product;
@@ -30,6 +38,7 @@ public class BakeryViewModel extends AndroidViewModel {
 
     private final MutableLiveData<String> currentScreen = new MutableLiveData<>("AUTH");
     private final MutableLiveData<Product> selectedProduct = new MutableLiveData<>();
+    private final MutableLiveData<String> weatherData = new MutableLiveData<>();
 
     public BakeryViewModel(@NonNull Application application) {
         super(application);
@@ -78,4 +87,34 @@ public class BakeryViewModel extends AndroidViewModel {
     public void removeFromCart(Product product) { manageCartUseCase.remove(product); }
     public void clearCart() { manageCartUseCase.clear(); }
     public void checkout(double cost, int itemCount) { repository.createOrder(cost, itemCount); }
+
+    public LiveData<String> getWeatherData() { return weatherData; }
+
+    public void fetchWeather(String city) {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://api.openweathermap.org/data/2.5/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        WeatherApi api = retrofit.create(WeatherApi.class);
+        api.getWeather(city, "987f8a3ed5f7f76fb867faa32c144231", "metric", "ru").enqueue(new Callback<WeatherResponse>() {
+            @Override
+            public void onResponse(Call<WeatherResponse> call, Response<WeatherResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    WeatherResponse w = response.body();
+                    String result = String.format(Locale.getDefault(), 
+                        "Город: %s\nТемпература: %.1f°C\nОщущается как: %.1f°C\nВлажность: %d%%\nОписание: %s",
+                        w.name, w.main.temp, w.main.feels_like, w.main.humidity, w.weather[0].description);
+                    weatherData.postValue(result);
+                } else {
+                    weatherData.postValue("Ошибка получения данных: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<WeatherResponse> call, Throwable t) {
+                weatherData.postValue("Ошибка сети: " + t.getMessage());
+            }
+        });
+    }
 }
