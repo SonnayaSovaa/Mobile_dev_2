@@ -4,11 +4,13 @@ import android.app.Application;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -38,7 +40,22 @@ public class BakeryViewModel extends AndroidViewModel {
 
     private final MutableLiveData<String> currentScreen = new MutableLiveData<>("AUTH");
     private final MutableLiveData<Product> selectedProduct = new MutableLiveData<>();
-    private final MutableLiveData<String> weatherData = new MutableLiveData<>();
+    
+    // Split weather data
+    private final MutableLiveData<String> temperature = new MutableLiveData<>();
+    private final MutableLiveData<String> weatherDescription = new MutableLiveData<>();
+    
+    // Filters
+    private final MutableLiveData<String> nameFilter = new MutableLiveData<>("");
+    private final MutableLiveData<Double> maxPriceFilter = new MutableLiveData<>(Double.MAX_VALUE);
+    private final MutableLiveData<Integer> categoryFilter = new MutableLiveData<>(-1); // -1 for all
+    
+    // Discount state
+    private final MutableLiveData<Integer> discountCategoryId = new MutableLiveData<>(-1);
+    private final MutableLiveData<String> discountKeyword = new MutableLiveData<>("");
+
+    private final MediatorLiveData<List<Product>> filteredProducts = new MediatorLiveData<>();
+    private final LiveData<List<Product>> productsSource;
 
     public BakeryViewModel(@NonNull Application application) {
         super(application);
@@ -48,49 +65,73 @@ public class BakeryViewModel extends AndroidViewModel {
         this.getProductsUseCase = new GetProductsUseCase(repository);
         this.getCartUseCase = new GetCartUseCase(repository);
         this.manageCartUseCase = new ManageCartUseCase(repository);
+
+        this.productsSource = getProductsUseCase.execute();
+        filteredProducts.addSource(productsSource, products -> applyFilters());
+        filteredProducts.addSource(nameFilter, filter -> applyFilters());
+        filteredProducts.addSource(maxPriceFilter, filter -> applyFilters());
+        filteredProducts.addSource(categoryFilter, filter -> applyFilters());
+    }
+
+    private void applyFilters() {
+        List<Product> products = productsSource.getValue();
+        if (products == null) return;
+
+        String name = nameFilter.getValue().toLowerCase();
+        double price = maxPriceFilter.getValue();
+        int catId = categoryFilter.getValue();
+
+        List<Product> result = products.stream()
+                .filter(p -> p.getName().toLowerCase().contains(name))
+                .filter(p -> p.getPrice() <= price)
+                .filter(p -> catId == -1 || p.getCategoryId() == catId)
+                .collect(Collectors.toList());
+        
+        filteredProducts.setValue(result);
     }
 
     public LiveData<String> getCurrentScreen() { return currentScreen; }
     public void navigateTo(String screen) { currentScreen.setValue(screen); }
-
     public LiveData<Product> getSelectedProduct() { return selectedProduct; }
     public void selectProduct(Product product) { selectedProduct.setValue(product); navigateTo("DETAIL"); }
-
-    public LiveData<Boolean> login(String email, String password) {
-        return loginUseCase.execute(email, password);
-    }
-
+    public LiveData<Boolean> login(String email, String password) { return loginUseCase.execute(email, password); }
     public void loginAsGuest() {
         User guest = new User("guest_" + System.currentTimeMillis(), "Гость", "", "", 0);
         repository.saveClientInfo(guest);
     }
-
-    public boolean isAuthorized() {
-        return repository.isAuthorized();
-    }
-
-    public void logout() {
-        repository.logout();
-        navigateTo("AUTH");
-    }
-
-    public LiveData<Boolean> register(String email, String password, String nickname) {
-        return registerUseCase.execute(email, password, nickname);
-    }
-
-    public LiveData<List<Product>> getProducts() { return getProductsUseCase.execute(); }
+    public boolean isAuthorized() { return repository.isAuthorized(); }
+    public void logout() { repository.logout(); navigateTo("AUTH"); }
+    public LiveData<Boolean> register(String email, String password, String nickname) { return registerUseCase.execute(email, password, nickname); }
+    public LiveData<List<Product>> getProducts() { return filteredProducts; }
     public LiveData<List<Category>> getCategories() { return repository.getCategories(); }
     public LiveData<User> getClientInfo() { return repository.getClientInfo(); }
     public LiveData<Map<Product, Integer>> getCartItems() { return getCartUseCase.execute(); }
+
+    public void setNameFilter(String name) { nameFilter.setValue(name); }
+    public void setMaxPriceFilter(Double price) { maxPriceFilter.setValue(price == null ? Double.MAX_VALUE : price); }
+    public void setCategoryFilter(int categoryId) { categoryFilter.setValue(categoryId); }
+    public LiveData<Integer> getCategoryFilter() { return categoryFilter; }
+
+    public LiveData<Integer> getDiscountCategoryId() { return discountCategoryId; }
+    public LiveData<String> getDiscountKeyword() { return discountKeyword; }
 
     public void addToCart(Product product) { manageCartUseCase.add(product); }
     public void removeFromCart(Product product) { manageCartUseCase.remove(product); }
     public void clearCart() { manageCartUseCase.clear(); }
     public void checkout(double cost, int itemCount) { repository.createOrder(cost, itemCount); }
 
-    public LiveData<String> getWeatherData() { return weatherData; }
+    public LiveData<String> getTemperature() { return temperature; }
+    public LiveData<String> getWeatherDescription() { return weatherDescription; }
 
     public void fetchWeather(String city) {
+        if (city == null || city.isEmpty() || city.equals("Выберите город")) {
+            temperature.setValue("");
+            weatherDescription.setValue("");
+            discountCategoryId.setValue(-1);
+            discountKeyword.setValue("");
+            return;
+        }
+
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("https://api.openweathermap.org/data/2.5/")
                 .addConverterFactory(GsonConverterFactory.create())
@@ -102,19 +143,44 @@ public class BakeryViewModel extends AndroidViewModel {
             public void onResponse(Call<WeatherResponse> call, Response<WeatherResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     WeatherResponse w = response.body();
-                    String result = String.format(Locale.getDefault(), 
-                        "Город: %s\nТемпература: %.1f°C\nОщущается как: %.1f°C\nВлажность: %d%%\nОписание: %s",
-                        w.name, w.main.temp, w.main.feels_like, w.main.humidity, w.weather[0].description);
-                    weatherData.postValue(result);
+                    temperature.postValue(String.format(Locale.getDefault(), "%.1f°C", w.main.temp));
+                    weatherDescription.postValue(w.weather[0].description);
+                    calculateDiscounts(w);
                 } else {
-                    weatherData.postValue("Ошибка получения данных: " + response.code());
+                    temperature.postValue("Ошибка");
+                    weatherDescription.postValue(String.valueOf(response.code()));
                 }
             }
-
             @Override
             public void onFailure(Call<WeatherResponse> call, Throwable t) {
-                weatherData.postValue("Ошибка сети: " + t.getMessage());
+                temperature.postValue("Ошибка");
+                weatherDescription.postValue("Нет сети");
             }
         });
+    }
+
+    private void calculateDiscounts(WeatherResponse w) {
+        float temp = w.main.temp;
+        String desc = w.weather[0].description.toLowerCase();
+        
+        int catId = -1;
+        String keyword = "";
+
+        // Categories: 1-Выпечка, 2-Горячие напитки, 6-Холодные напитки, 3-Пончики, 4-Хлеб, 5-Десерты
+        if (desc.contains("дожд") || desc.contains("rain")) {
+            catId = 1; // Выпечка
+        } else if (temp < 10) {
+            catId = 2; // Горячие напитки
+            keyword = "HOT"; 
+        } else if (temp > 25) {
+            catId = 6; // Холодные напитки
+            keyword = "COLD";
+        } else if (desc.contains("солн") || desc.contains("clear") || desc.contains("ясно")) {
+            catId = 5; // Десерты (Мороженое)
+            keyword = "мороженое";
+        }
+        
+        discountCategoryId.postValue(catId);
+        discountKeyword.postValue(keyword);
     }
 }

@@ -2,11 +2,14 @@ package ru.mirea.nagishevakv.backeryproject;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
@@ -30,6 +33,7 @@ import ru.mirea.nagishevakv.backeryproject.domain.model.Product;
 import ru.mirea.nagishevakv.backeryproject.presentation.AuthActivity;
 import ru.mirea.nagishevakv.backeryproject.presentation.adapter.CartAdapter;
 import ru.mirea.nagishevakv.backeryproject.presentation.adapter.CatalogAdapter;
+import ru.mirea.nagishevakv.backeryproject.presentation.adapter.CategoryNavAdapter;
 import ru.mirea.nagishevakv.backeryproject.presentation.adapter.OrderBillAdapter;
 import ru.mirea.nagishevakv.backeryproject.presentation.viewmodel.BakeryViewModel;
 
@@ -122,29 +126,43 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void setupWeatherScreen(LayoutInflater inflater) {
-        View view = inflater.inflate(R.layout.screen_weather, container, false);
-        Spinner spinner = view.findViewById(R.id.spinner_cities);
-        Button btn = view.findViewById(R.id.btn_get_weather);
-        TextView tvResult = view.findViewById(R.id.tv_weather_result);
-
-        String[] cities = {"Moscow", "London", "Paris", "Berlin", "Tokyo", "New York", "Dubai"};
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, cities);
-        spinner.setAdapter(adapter);
-
-        btn.setOnClickListener(v -> viewModel.fetchWeather(spinner.getSelectedItem().toString()));
-        viewModel.getWeatherData().observe(this, tvResult::setText);
-
-        container.addView(view);
-    }
-
     private void setupCatalogScreen(LayoutInflater inflater) {
         View view = inflater.inflate(R.layout.screen_catalog, container, false);
         RecyclerView rvCatalog = view.findViewById(R.id.rv_catalog);
-        
+        RecyclerView rvCategoryNav = view.findViewById(R.id.rv_categories_nav);
+        EditText etSearch = view.findViewById(R.id.et_search);
+        EditText etMaxPrice = view.findViewById(R.id.et_max_price);
+        Spinner spinnerCities = view.findViewById(R.id.spinner_cities_catalog);
+        Button btnSelectCity = view.findViewById(R.id.btn_select_city_catalog);
+
+        // City selection for discounts
+        String[] cities = {"Выберите город", "Moscow", "London", "Paris", "Berlin", "Tokyo", "New York", "Dubai"};
+        ArrayAdapter<String> cityAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, cities);
+        spinnerCities.setAdapter(cityAdapter);
+        btnSelectCity.setOnClickListener(v -> viewModel.fetchWeather(spinnerCities.getSelectedItem().toString()));
+
+        // Filters listeners
+        etSearch.addTextChangedListener(new SimpleTextWatcher(s -> viewModel.setNameFilter(s)));
+        etMaxPrice.addTextChangedListener(new SimpleTextWatcher(s -> {
+            try {
+                viewModel.setMaxPriceFilter(s.isEmpty() ? null : Double.parseDouble(s));
+            } catch (NumberFormatException e) {
+                viewModel.setMaxPriceFilter(null);
+            }
+        }));
+
+        // 1. Horizontal Category Nav
+        rvCategoryNav.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        CategoryNavAdapter navAdapter = new CategoryNavAdapter(categoryId -> {
+            viewModel.setCategoryFilter(categoryId);
+        });
+        rvCategoryNav.setAdapter(navAdapter);
+        viewModel.getCategories().observe(this, navAdapter::setCategories);
+        viewModel.getCategoryFilter().observe(this, navAdapter::setSelectedCategoryId);
+
+        // 2. Main Catalog Adapter
         GridLayoutManager layoutManager = new GridLayoutManager(this, 2);
         rvCatalog.setLayoutManager(layoutManager);
-
         CatalogAdapter adapter = new CatalogAdapter(new CatalogAdapter.OnProductClickListener() {
             @Override
             public void onProductClick(Product product) {
@@ -165,17 +183,48 @@ public class MainActivity extends AppCompatActivity {
                 viewModel.removeFromCart(product);
             }
         });
-        
         layoutManager.setSpanSizeLookup(adapter.getSpanSizeLookup(2));
         rvCatalog.setAdapter(adapter);
 
-        viewModel.getCategories().observe(this, categories -> {
-            viewModel.getProducts().observe(this, products -> {
-                viewModel.getCartItems().observe(this, cartMap -> {
-                    adapter.setData(categories, products, cartMap);
-                });
-            });
-        });
+        // Observations for Data
+        viewModel.getCategories().observe(this, categories -> updateCatalogData(adapter));
+        viewModel.getProducts().observe(this, products -> updateCatalogData(adapter));
+        viewModel.getCartItems().observe(this, cart -> updateCatalogData(adapter));
+        viewModel.getDiscountCategoryId().observe(this, id -> updateCatalogData(adapter));
+        viewModel.getDiscountKeyword().observe(this, keyword -> updateCatalogData(adapter));
+
+        container.addView(view);
+    }
+
+    private void updateCatalogData(CatalogAdapter adapter) {
+        adapter.setData(
+                viewModel.getCategories().getValue(),
+                viewModel.getProducts().getValue(),
+                viewModel.getCartItems().getValue(),
+                viewModel.getDiscountCategoryId().getValue() != null ? viewModel.getDiscountCategoryId().getValue() : -1,
+                viewModel.getDiscountKeyword().getValue() != null ? viewModel.getDiscountKeyword().getValue() : ""
+        );
+    }
+
+    private void setupWeatherScreen(LayoutInflater inflater) {
+        View view = inflater.inflate(R.layout.screen_weather, container, false);
+        Spinner spinner = view.findViewById(R.id.spinner_cities);
+        Button btn = view.findViewById(R.id.btn_get_weather);
+        TextView tvTemp = view.findViewById(R.id.tv_temperature);
+        TextView tvDesc = view.findViewById(R.id.tv_weather_description);
+
+        // Brown button color
+        btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#5D4037")));
+        btn.setTextColor(android.graphics.Color.WHITE);
+
+        String[] cities = {"Выберите город", "Moscow", "London", "Paris", "Berlin", "Tokyo", "New York", "Dubai"};
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, cities);
+        spinner.setAdapter(adapter);
+
+        btn.setOnClickListener(v -> viewModel.fetchWeather(spinner.getSelectedItem().toString()));
+        
+        viewModel.getTemperature().observe(this, tvTemp::setText);
+        viewModel.getWeatherDescription().observe(this, tvDesc::setText);
 
         container.addView(view);
     }
@@ -246,8 +295,10 @@ public class MainActivity extends AppCompatActivity {
                     tvCategory.setText(String.format(Locale.getDefault(), "Категория: %s", categoryName));
                 });
 
-                tvWeight.setText(String.format(Locale.getDefault(), "Вес/Объём: %.0f %s", product.getWeightOrVolume(), product.getUnit()));
-                tvPrice.setText(String.format(Locale.getDefault(), "%.2f ₽", product.getPrice()));
+                String unit = product.getUnit().toLowerCase();
+                String label = (unit.equals("мл") || unit.equals("л")) ? "Объём" : "Вес";
+                tvWeight.setText(String.format(Locale.getDefault(), "%s: %.0f %s", label, product.getWeightOrVolume(), product.getUnit()));
+                tvPrice.setText(String.format(Locale.getDefault(), "%d ₽", product.getPrice()));
                 tvDescription.setText(product.getDescription());
 
                 btnAdd.setOnClickListener(v -> {
@@ -290,15 +341,15 @@ public class MainActivity extends AppCompatActivity {
             adapter.setCartItems(cartMap);
 
             int totalCount = 0;
-            double totalPrice = 0.0;
+            long totalPrice = 0;
             if (cartMap != null) {
                 for (Map.Entry<Product, Integer> entry : cartMap.entrySet()) {
                     totalCount += entry.getValue();
-                    totalPrice += entry.getKey().getPrice() * entry.getValue();
+                    totalPrice += (long) entry.getKey().getPrice() * entry.getValue();
                 }
             }
 
-            tvSummary.setText(String.format(Locale.getDefault(), "Товаров: %d | Итого: %.2f ₽", totalCount, totalPrice));
+            tvSummary.setText(String.format(Locale.getDefault(), "Товаров: %d | Итого: %d ₽", totalCount, totalPrice));
 
             int distinctCount = cartMap != null ? cartMap.size() : 0;
             btnCheckoutBottom.setVisibility(distinctCount > 6 ? View.VISIBLE : View.GONE);
@@ -323,15 +374,15 @@ public class MainActivity extends AppCompatActivity {
 
         viewModel.getCartItems().observe(this, cartMap -> {
             adapter.setItems(cartMap);
-            double totalPrice = 0.0;
+            long totalPrice = 0;
             if (cartMap != null) {
                 for (Map.Entry<Product, Integer> entry : cartMap.entrySet()) {
-                    totalPrice += entry.getKey().getPrice() * entry.getValue();
+                    totalPrice += (long) entry.getKey().getPrice() * entry.getValue();
                 }
             }
-            tvOrderTotal.setText(String.format(Locale.getDefault(), "Итого к оплате: %.2f ₽", totalPrice));
+            tvOrderTotal.setText(String.format(Locale.getDefault(), "Итого к оплате: %d ₽", totalPrice));
             
-            double finalTotalPrice = totalPrice;
+            long finalTotalPrice = totalPrice;
             int totalCount = cartMap != null ? cartMap.values().stream().mapToInt(Integer::intValue).sum() : 0;
             
             btnConfirm.setOnClickListener(v -> {
@@ -339,7 +390,7 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(this, "Корзина пуста", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                viewModel.checkout(finalTotalPrice, totalCount);
+                viewModel.checkout((double) finalTotalPrice, totalCount);
                 Toast.makeText(this, "Заказ оформлен!", Toast.LENGTH_SHORT).show();
                 viewModel.clearCart();
                 viewModel.navigateTo("ACCOUNT");
@@ -354,5 +405,13 @@ public class MainActivity extends AppCompatActivity {
         Button btnToCatalog = view.findViewById(R.id.btn_about_to_catalog);
         btnToCatalog.setOnClickListener(v -> viewModel.navigateTo("CATALOG"));
         container.addView(view);
+    }
+
+    private static class SimpleTextWatcher implements TextWatcher {
+        private final java.util.function.Consumer<String> consumer;
+        public SimpleTextWatcher(java.util.function.Consumer<String> consumer) { this.consumer = consumer; }
+        @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+        @Override public void onTextChanged(CharSequence s, int start, int before, int count) { consumer.accept(s.toString()); }
+        @Override public void afterTextChanged(Editable s) {}
     }
 }

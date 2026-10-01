@@ -84,7 +84,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
 
         public void bind(Product product, Map<Product, Integer> cartMap, OnCartQuantityChangeListener listener) {
             tvName.setText(product.getName());
-            tvPrice.setText(String.format("%.2f ₽", product.getPrice()));
+            tvPrice.setText(String.format("%d ₽", product.getPrice()));
 
             int quantity = cartMap != null && cartMap.get(product) != null ? cartMap.get(product) : 0;
 

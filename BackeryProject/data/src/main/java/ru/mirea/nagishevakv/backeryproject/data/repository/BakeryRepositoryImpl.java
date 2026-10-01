@@ -173,6 +173,7 @@ public class BakeryRepositoryImpl implements BakeryRepository {
 
         mediator.addSource(networkSource, products -> {
             if (products != null) {
+                mediator.setValue(products); // Fix: Set value directly so UI updates immediately
                 executor.execute(() -> {
                     bakeryDao.insertProducts(products.stream()
                             .map(p -> new ProductEntity(p.getId(), p.getName(), p.getCategoryId(), p.getWeightOrVolume(), p.getUnit(), p.getDescription(), p.getPrice(), p.getImageUrl()))

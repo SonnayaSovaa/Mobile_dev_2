@@ -58,7 +58,8 @@ public class OrderBillAdapter extends RecyclerView.Adapter<OrderBillAdapter.Bill
         public void bind(Map.Entry<Product, Integer> item) {
             Product product = item.getKey();
             int qty = item.getValue();
-            tvNamePrice.setText(String.format("%s, %.2f ₽", product.getName(), product.getPrice()));
+            // Display price as integer
+            tvNamePrice.setText(String.format("%s, %d ₽", product.getName(), product.getPrice()));
             tvQuantity.setText(String.format("%d шт.", qty));
         }
     }

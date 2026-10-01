@@ -12,12 +12,12 @@ public class ProductEntity {
     public double weightOrVolume;
     public String unit;
     public String description;
-    public double price;
+    public int price;
     public String imageUrl;
 
     public ProductEntity() {}
 
-    public ProductEntity(int id, String name, int categoryId, double weightOrVolume, String unit, String description, double price, String imageUrl) {
+    public ProductEntity(int id, String name, int categoryId, double weightOrVolume, String unit, String description, int price, String imageUrl) {
         this.id = id;
         this.name = name;
         this.categoryId = categoryId;

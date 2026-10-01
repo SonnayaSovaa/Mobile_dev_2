@@ -3,13 +3,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:background="#FFFBF0">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Выберите город:"
         android:textSize="18sp"
+        android:textColor="#5D4037"
         android:layout_marginBottom="8dp"/>
 
     <Spinner
@@ -22,14 +24,25 @@
         android:id="@+id/btn_get_weather"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Узнать погоду" />
+        android:text="Узнать погоду"
+        android:backgroundTint="#5D4037"
+        android:textColor="#FFFFFF"/>
 
     <TextView
-        android:id="@+id/tv_weather_result"
+        android:id="@+id/tv_temperature"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:textSize="16sp"
-        android:lineSpacingExtra="4dp"
+        android:textSize="30pt"
+        android:textStyle="bold"
+        android:textColor="#5D4037"
+        android:textAlignment="center"/>
+
+    <TextView
+        android:id="@+id/tv_weather_description"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="16pt"
+        android:textColor="#FB8C00"
         android:textAlignment="center"/>
 </LinearLayout>

@@ -3,16 +3,73 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/cream_bg">
+    android:background="#FFFBF0">
 
-    <TextView
-        android:layout_width="wrap_content"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_categories_nav"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Каталог Пекарни"
-        android:textSize="22sp"
-        android:textStyle="bold"
-        android:textColor="@color/dark_brown"
-        android:layout_margin="16dp"/>
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:layout_marginTop="60dp"
+        android:clipToPadding="false"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="8dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <Spinner
+                android:id="@+id/spinner_cities_catalog"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
+            <Button
+                android:id="@+id/btn_select_city_catalog"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Выбрать"
+                android:textSize="12sp"
+                android:backgroundTint="#5D4037"
+                android:textColor="#FFFFFF" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="4dp">
+
+            <EditText
+                android:id="@+id/et_search"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="Поиск..."
+                android:textSize="14sp"
+                android:padding="10dp"
+                android:background="@android:drawable/editbox_background_normal" />
+
+            <EditText
+                android:id="@+id/et_max_price"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:hint="Цена до"
+                android:inputType="numberDecimal"
+                android:textSize="14sp"
+                android:padding="10dp"
+                android:background="@android:drawable/editbox_background_normal" />
+        </LinearLayout>
+    </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_catalog"

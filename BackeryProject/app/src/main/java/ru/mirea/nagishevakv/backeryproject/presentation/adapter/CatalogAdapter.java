@@ -14,8 +14,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import ru.mirea.nagishevakv.backeryproject.R;
@@ -36,21 +36,30 @@ public class CatalogAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private final List<Object> items = new ArrayList<>();
     private Map<Product, Integer> cartMap;
     private final OnProductClickListener listener;
+    
+    private int discountCategoryId = -1;
+    private String discountKeyword = "";
 
     public CatalogAdapter(OnProductClickListener listener) {
         this.listener = listener;
     }
 
-    public void setData(List<Category> categories, List<Product> products, Map<Product, Integer> cartMap) {
+    public void setData(List<Category> categories, List<Product> products, Map<Product, Integer> cartMap, int discountCategoryId, String discountKeyword) {
         this.items.clear();
         this.cartMap = cartMap;
+        this.discountCategoryId = discountCategoryId;
+        this.discountKeyword = discountKeyword;
+        
         if (categories != null && products != null) {
             for (Category category : categories) {
-                items.add(category);
                 List<Product> categoryProducts = products.stream()
                         .filter(p -> p.getCategoryId() == category.getId())
                         .collect(Collectors.toList());
-                items.addAll(categoryProducts);
+                
+                if (!categoryProducts.isEmpty()) {
+                    items.add(category);
+                    items.addAll(categoryProducts);
+                }
             }
         }
         notifyDataSetChanged();
@@ -76,9 +85,9 @@ public class CatalogAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         if (holder instanceof HeaderViewHolder) {
-            ((HeaderViewHolder) holder).bind((Category) items.get(position));
+            ((HeaderViewHolder) holder).bind((Category) items.get(position), discountCategoryId);
         } else {
-            ((ProductViewHolder) holder).bind((Product) items.get(position), cartMap, listener);
+            ((ProductViewHolder) holder).bind((Product) items.get(position), cartMap, discountCategoryId, discountKeyword, listener);
         }
     }
 
@@ -98,14 +107,17 @@ public class CatalogAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     static class HeaderViewHolder extends RecyclerView.ViewHolder {
         private final TextView tvCategoryName;
+        private final TextView tvCategoryDiscount;
 
         public HeaderViewHolder(@NonNull View itemView) {
             super(itemView);
             tvCategoryName = itemView.findViewById(R.id.tv_category_name);
+            tvCategoryDiscount = itemView.findViewById(R.id.tv_category_discount);
         }
 
-        public void bind(Category category) {
+        public void bind(Category category, int discountCatId) {
             tvCategoryName.setText(category.getName());
+            tvCategoryDiscount.setVisibility(category.getId() == discountCatId ? View.VISIBLE : View.GONE);
         }
     }
 
@@ -118,6 +130,7 @@ public class CatalogAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         private final TextView tvQuantity;
         private final Button btnMinus;
         private final Button btnPlus;
+        private final TextView tvProductDiscount;
 
         public ProductViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -129,11 +142,29 @@ public class CatalogAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             tvQuantity = itemView.findViewById(R.id.tv_quantity);
             btnMinus = itemView.findViewById(R.id.btn_minus);
             btnPlus = itemView.findViewById(R.id.btn_plus);
+            tvProductDiscount = itemView.findViewById(R.id.tv_product_discount);
         }
 
-        public void bind(Product product, Map<Product, Integer> cartMap, OnProductClickListener listener) {
+        public void bind(Product product, Map<Product, Integer> cartMap, int discountCatId, String keyword, OnProductClickListener listener) {
             tvName.setText(product.getName());
-            tvPrice.setText(String.format("%.2f ₽", product.getPrice()));
+            
+            boolean hasDiscount = (product.getCategoryId() == discountCatId);
+            if (!hasDiscount && !keyword.isEmpty()) {
+                String name = product.getName().toLowerCase();
+                if (keyword.equals("HOT") && name.contains("капучино") && !name.contains("айс")) hasDiscount = true;
+                if (keyword.equals("COLD") && (name.contains("айс") || name.contains("лимонад"))) hasDiscount = true;
+                if (keyword.equals("мороженое") && name.contains("мороженое")) hasDiscount = true;
+            }
+
+            double displayPrice = product.getPrice();
+            if (hasDiscount) {
+                displayPrice = displayPrice * 0.85;
+                tvProductDiscount.setVisibility(View.VISIBLE);
+                tvPrice.setText(String.format(Locale.getDefault(), "%.2f ₽", displayPrice));
+            } else {
+                tvProductDiscount.setVisibility(View.GONE);
+                tvPrice.setText(String.format(Locale.getDefault(), "%d ₽", product.getPrice()));
+            }
 
             int quantity = 0;
             if (cartMap != null) {

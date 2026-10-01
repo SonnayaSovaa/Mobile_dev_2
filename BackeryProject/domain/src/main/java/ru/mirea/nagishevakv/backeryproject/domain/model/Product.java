@@ -7,10 +7,10 @@ public class Product {
     private final double weightOrVolume;
     private final String unit;
     private final String description;
-    private final double price;
+    private final int price;
     private final String imageUrl;
 
-    public Product(int id, String name, int categoryId, double weightOrVolume, String unit, String description, double price, String imageUrl) {
+    public Product(int id, String name, int categoryId, double weightOrVolume, String unit, String description, int price, String imageUrl) {
         this.id = id;
         this.name = name;
         this.categoryId = categoryId;
@@ -27,6 +27,6 @@ public class Product {
     public double getWeightOrVolume() { return weightOrVolume; }
     public String getUnit() { return unit; }
     public String getDescription() { return description; }
-    public double getPrice() { return price; }
+    public int getPrice() { return price; }
     public String getImageUrl() { return imageUrl; }
 }
