@@ -17,6 +17,31 @@
         android:gravity="center"
         android:layout_marginBottom="12dp"/>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="8dp">
+
+        <Spinner
+            android:id="@+id/spinner_cities_cart"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/bg_city_selection"
+            android:layout_marginEnd="8dp" />
+
+        <Button
+            android:id="@+id/btn_select_city_cart"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Выбрать"
+            android:textSize="12sp"
+            android:backgroundTint="#5D4037"
+            android:textColor="#FFFFFF" />
+    </LinearLayout>
+
     <Button
         android:id="@+id/btn_checkout_top"
         android:layout_width="match_parent"

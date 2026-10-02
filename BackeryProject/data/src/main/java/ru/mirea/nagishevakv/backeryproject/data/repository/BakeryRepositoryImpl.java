@@ -8,15 +8,19 @@ import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import ru.mirea.nagishevakv.backeryproject.data.local.dao.BakeryDao;
 import ru.mirea.nagishevakv.backeryproject.data.local.db.BakeryDatabase;
+import ru.mirea.nagishevakv.backeryproject.data.local.entity.OrderEntity;
 import ru.mirea.nagishevakv.backeryproject.data.local.entity.ProductEntity;
 import ru.mirea.nagishevakv.backeryproject.data.local.entity.UserEntity;
 import ru.mirea.nagishevakv.backeryproject.data.network.NetworkApi;
@@ -173,7 +177,7 @@ public class BakeryRepositoryImpl implements BakeryRepository {
 
         mediator.addSource(networkSource, products -> {
             if (products != null) {
-                mediator.setValue(products); // Fix: Set value directly so UI updates immediately
+                mediator.setValue(products);
                 executor.execute(() -> {
                     bakeryDao.insertProducts(products.stream()
                             .map(p -> new ProductEntity(p.getId(), p.getName(), p.getCategoryId(), p.getWeightOrVolume(), p.getUnit(), p.getDescription(), p.getPrice(), p.getImageUrl()))
@@ -188,8 +192,22 @@ public class BakeryRepositoryImpl implements BakeryRepository {
     public LiveData<List<Category>> getCategories() { return networkApi.getCategories(); }
     @Override
     public LiveData<List<Comment>> getComments(int productId) { return new MutableLiveData<>(new ArrayList<>()); }
+    
     @Override
-    public LiveData<List<Order>> getOrders() { return new MutableLiveData<>(new ArrayList<>()); }
+    public LiveData<List<Order>> getOrders() {
+        String userId = sharedPreferences.getString("user_id", "");
+        MediatorLiveData<List<Order>> mediator = new MediatorLiveData<>();
+        mediator.addSource(bakeryDao.getAllOrders(), entities -> {
+            if (entities != null) {
+                List<Order> filtered = entities.stream()
+                        .filter(e -> e.userId.equals(userId))
+                        .map(e -> new Order(e.id, e.userId, e.cost, e.itemCount, e.itemsDescription, e.date, e.city, e.status))
+                        .collect(Collectors.toList());
+                mediator.setValue(filtered);
+            }
+        });
+        return mediator;
+    }
 
     @Override
     public void addToCart(Product product) {
@@ -201,10 +219,17 @@ public class BakeryRepositoryImpl implements BakeryRepository {
     @Override
     public void removeFromCart(Product product) {
         Map<Product, Integer> current = new HashMap<>(cartItems.getValue());
-        if (current.containsKey(product)) {
-            int count = current.get(product);
-            if (count > 1) current.put(product, count - 1);
-            else current.remove(product);
+        Product found = null;
+        for (Product p : current.keySet()) {
+            if (p.getId() == product.getId()) {
+                found = p;
+                break;
+            }
+        }
+        if (found != null) {
+            int count = current.get(found);
+            if (count > 1) current.put(found, count - 1);
+            else current.remove(found);
             cartItems.setValue(current);
         }
     }
@@ -213,6 +238,13 @@ public class BakeryRepositoryImpl implements BakeryRepository {
     public void clearCart() { cartItems.setValue(new HashMap<>()); }
     @Override
     public LiveData<Map<Product, Integer>> getCartItems() { return cartItems; }
+    
     @Override
-    public void createOrder(double cost, int itemCount) {}
+    public void createOrder(double cost, int itemCount, String itemsDescription, String city) {
+        String userId = sharedPreferences.getString("user_id", "");
+        String date = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(new Date());
+        executor.execute(() -> {
+            bakeryDao.insertOrder(new OrderEntity(userId, cost, itemCount, itemsDescription, date, city, "Активен"));
+        });
+    }
 }

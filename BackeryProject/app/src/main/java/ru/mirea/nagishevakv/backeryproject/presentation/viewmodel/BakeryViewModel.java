@@ -21,6 +21,7 @@ import ru.mirea.nagishevakv.backeryproject.data.network.weather.WeatherApi;
 import ru.mirea.nagishevakv.backeryproject.data.network.weather.WeatherResponse;
 import ru.mirea.nagishevakv.backeryproject.data.repository.BakeryRepositoryImpl;
 import ru.mirea.nagishevakv.backeryproject.domain.model.Category;
+import ru.mirea.nagishevakv.backeryproject.domain.model.Order;
 import ru.mirea.nagishevakv.backeryproject.domain.model.Product;
 import ru.mirea.nagishevakv.backeryproject.domain.model.User;
 import ru.mirea.nagishevakv.backeryproject.domain.repository.BakeryRepository;
@@ -41,9 +42,10 @@ public class BakeryViewModel extends AndroidViewModel {
     private final MutableLiveData<String> currentScreen = new MutableLiveData<>("AUTH");
     private final MutableLiveData<Product> selectedProduct = new MutableLiveData<>();
     
-    // Split weather data
-    private final MutableLiveData<String> temperature = new MutableLiveData<>();
-    private final MutableLiveData<String> weatherDescription = new MutableLiveData<>();
+    // Weather & City sync
+    private final MutableLiveData<String> selectedCity = new MutableLiveData<>("Выберите город");
+    private final MutableLiveData<String> temperature = new MutableLiveData<>("");
+    private final MutableLiveData<String> weatherDescription = new MutableLiveData<>("");
     
     // Filters
     private final MutableLiveData<String> nameFilter = new MutableLiveData<>("");
@@ -106,6 +108,7 @@ public class BakeryViewModel extends AndroidViewModel {
     public LiveData<List<Category>> getCategories() { return repository.getCategories(); }
     public LiveData<User> getClientInfo() { return repository.getClientInfo(); }
     public LiveData<Map<Product, Integer>> getCartItems() { return getCartUseCase.execute(); }
+    public LiveData<List<Order>> getOrders() { return repository.getOrders(); }
 
     public void setNameFilter(String name) { nameFilter.setValue(name); }
     public void setMaxPriceFilter(Double price) { maxPriceFilter.setValue(price == null ? Double.MAX_VALUE : price); }
@@ -118,12 +121,14 @@ public class BakeryViewModel extends AndroidViewModel {
     public void addToCart(Product product) { manageCartUseCase.add(product); }
     public void removeFromCart(Product product) { manageCartUseCase.remove(product); }
     public void clearCart() { manageCartUseCase.clear(); }
-    public void checkout(double cost, int itemCount) { repository.createOrder(cost, itemCount); }
+    public void checkout(double cost, int itemCount, String desc, String city) { repository.createOrder(cost, itemCount, desc, city); }
 
     public LiveData<String> getTemperature() { return temperature; }
     public LiveData<String> getWeatherDescription() { return weatherDescription; }
+    public LiveData<String> getSelectedCity() { return selectedCity; }
 
     public void fetchWeather(String city) {
+        selectedCity.setValue(city);
         if (city == null || city.isEmpty() || city.equals("Выберите город")) {
             temperature.setValue("");
             weatherDescription.setValue("");
@@ -149,6 +154,8 @@ public class BakeryViewModel extends AndroidViewModel {
                 } else {
                     temperature.postValue("Ошибка");
                     weatherDescription.postValue(String.valueOf(response.code()));
+                    discountCategoryId.postValue(-1);
+                    discountKeyword.postValue("");
                 }
             }
             @Override
@@ -166,7 +173,6 @@ public class BakeryViewModel extends AndroidViewModel {
         int catId = -1;
         String keyword = "";
 
-        // Categories: 1-Выпечка, 2-Горячие напитки, 6-Холодные напитки, 3-Пончики, 4-Хлеб, 5-Десерты
         if (desc.contains("дожд") || desc.contains("rain")) {
             catId = 1; // Выпечка
         } else if (temp < 10) {
@@ -176,7 +182,7 @@ public class BakeryViewModel extends AndroidViewModel {
             catId = 6; // Холодные напитки
             keyword = "COLD";
         } else if (desc.contains("солн") || desc.contains("clear") || desc.contains("ясно")) {
-            catId = 5; // Десерты (Мороженое)
+            catId = 5; // Десерты
             keyword = "мороженое";
         }
         

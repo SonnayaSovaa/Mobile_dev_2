@@ -33,5 +33,5 @@ public interface BakeryRepository {
     LiveData<Map<Product, Integer>> getCartItems();
     
     // Order
-    void createOrder(double cost, int itemCount);
+    void createOrder(double cost, int itemCount, String itemsDescription, String city);
 }

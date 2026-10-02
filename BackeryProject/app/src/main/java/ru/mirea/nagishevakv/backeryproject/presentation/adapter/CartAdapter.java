@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import ru.mirea.nagishevakv.backeryproject.R;
@@ -32,13 +33,17 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
     private final List<Product> cartProducts = new ArrayList<>();
     private Map<Product, Integer> cartMap;
     private final OnCartQuantityChangeListener listener;
+    private int discountCategoryId = -1;
+    private String discountKeyword = "";
 
     public CartAdapter(OnCartQuantityChangeListener listener) {
         this.listener = listener;
     }
 
-    public void setCartItems(Map<Product, Integer> newCartMap) {
+    public void setCartItems(Map<Product, Integer> newCartMap, int discountCatId, String keyword) {
         this.cartMap = newCartMap;
+        this.discountCategoryId = discountCatId;
+        this.discountKeyword = keyword;
         this.cartProducts.clear();
         if (newCartMap != null) {
             this.cartProducts.addAll(newCartMap.keySet());
@@ -56,7 +61,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
     @Override
     public void onBindViewHolder(@NonNull CartViewHolder holder, int position) {
         Product product = cartProducts.get(position);
-        holder.bind(product, cartMap, listener);
+        holder.bind(product, cartMap, discountCategoryId, discountKeyword, listener);
     }
 
     @Override
@@ -73,6 +78,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
         private final TextView tvQuantity;
         private final Button btnMinus;
         private final Button btnPlus;
+        private final TextView tvProductDiscount;
 
         public CartViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -84,13 +90,30 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
             tvQuantity = itemView.findViewById(R.id.tv_quantity);
             btnMinus = itemView.findViewById(R.id.btn_minus);
             btnPlus = itemView.findViewById(R.id.btn_plus);
+            tvProductDiscount = itemView.findViewById(R.id.tv_product_discount);
         }
 
-        public void bind(Product product, Map<Product, Integer> cartMap, OnCartQuantityChangeListener listener) {
+        public void bind(Product product, Map<Product, Integer> cartMap, int discountCatId, String keyword, OnCartQuantityChangeListener listener) {
             tvName.setText(product.getName());
-            tvPrice.setText(String.format("%d ₽", product.getPrice()));
+            
+            boolean hasDiscount = (product.getCategoryId() == discountCatId);
+            if (!hasDiscount && !keyword.isEmpty()) {
+                String name = product.getName().toLowerCase();
+                if (keyword.equals("HOT") && name.contains("капучино") && !name.contains("айс")) hasDiscount = true;
+                if (keyword.equals("COLD") && (name.contains("айс") || name.contains("лимонад"))) hasDiscount = true;
+                if (keyword.equals("мороженое") && name.contains("мороженое")) hasDiscount = true;
+            }
 
-            // Load image from assets/images/products/
+            double displayPrice = product.getPrice();
+            if (hasDiscount) {
+                displayPrice = displayPrice * 0.85;
+                tvProductDiscount.setVisibility(View.VISIBLE);
+                tvPrice.setText(String.format(Locale.getDefault(), "%.2f ₽", displayPrice));
+            } else {
+                tvProductDiscount.setVisibility(View.GONE);
+                tvPrice.setText(String.format(Locale.getDefault(), "%d ₽", product.getPrice()));
+            }
+
             String fileName = product.getImageUrl();
             if (fileName != null && !fileName.isEmpty()) {
                 try (InputStream is = itemView.getContext().getAssets().open("images/products/" + fileName)) {
@@ -112,6 +135,11 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
             btnAddToCart.setVisibility(View.GONE);
             llQuantityControl.setVisibility(View.VISIBLE);
             tvQuantity.setText(String.valueOf(quantity));
+
+            // Set text color for + and - buttons in the cart
+            int color = itemView.getContext().getColor(R.color.dark_brown);
+            btnMinus.setTextColor(color);
+            btnPlus.setTextColor(color);
 
             btnPlus.setOnClickListener(v -> listener.onAdd(product));
             btnMinus.setOnClickListener(v -> listener.onMinus(product));

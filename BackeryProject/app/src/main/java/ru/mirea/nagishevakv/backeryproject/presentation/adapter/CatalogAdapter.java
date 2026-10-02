@@ -131,8 +131,8 @@ public class CatalogAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         private final Button btnAddToCart;
         private final LinearLayout llQuantityControl;
         private final TextView tvQuantity;
-        private final Button btnMinus;
-        private final Button btnPlus;
+        private final TextView btnMinus;
+        private final TextView btnPlus;
         private final TextView tvProductDiscount;
 
         public ProductViewHolder(@NonNull View itemView) {
@@ -151,7 +151,6 @@ public class CatalogAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         public void bind(Product product, Map<Product, Integer> cartMap, int discountCatId, String keyword, OnProductClickListener listener) {
             tvName.setText(product.getName());
             
-            // Fixed image loading path and method
             String fileName = product.getImageUrl();
             if (fileName != null && !fileName.isEmpty()) {
                 try (InputStream is = itemView.getContext().getAssets().open("images/products/" + fileName)) {
@@ -196,9 +195,16 @@ public class CatalogAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 btnAddToCart.setVisibility(View.GONE);
                 llQuantityControl.setVisibility(View.VISIBLE);
                 tvQuantity.setText(String.valueOf(quantity));
+                
+                int color = itemView.getContext().getColor(R.color.dark_brown);
+                btnMinus.setTextColor(color);
+                btnPlus.setTextColor(color);
             } else {
                 btnAddToCart.setVisibility(View.VISIBLE);
                 llQuantityControl.setVisibility(View.GONE);
+                
+                btnMinus.setTextColor(itemView.getContext().getColor(R.color.white));
+                btnPlus.setTextColor(itemView.getContext().getColor(R.color.white));
             }
 
             itemView.setOnClickListener(v -> listener.onProductClick(product));
