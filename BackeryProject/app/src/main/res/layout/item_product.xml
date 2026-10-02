@@ -18,12 +18,13 @@
             android:layout_width="match_parent"
             android:layout_height="120dp">
 
-            <ImageView
+            <com.google.android.material.imageview.ShapeableImageView
                 android:id="@+id/iv_product"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop"
-                android:src="@android:drawable/ic_menu_report_image" />
+                android:src="@android:drawable/ic_menu_report_image"
+                app:shapeAppearanceOverlay="@style/RoundedImageView" />
 
             <TextView
                 android:id="@+id/tv_product_discount"

@@ -1,6 +1,7 @@
 package ru.mirea.nagishevakv.backeryproject;
 
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -11,6 +12,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -24,6 +26,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -270,6 +274,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupDetailScreen(LayoutInflater inflater) {
         View view = inflater.inflate(R.layout.screen_detail, container, false);
+        ImageView ivPhoto = view.findViewById(R.id.iv_detail_photo);
         TextView tvName = view.findViewById(R.id.tv_detail_name);
         TextView tvCategory = view.findViewById(R.id.tv_detail_category);
         TextView tvWeight = view.findViewById(R.id.tv_detail_weight);
@@ -281,6 +286,18 @@ public class MainActivity extends AppCompatActivity {
         viewModel.getSelectedProduct().observe(this, product -> {
             if (product != null) {
                 tvName.setText(product.getName());
+                
+                String fileName = product.getImageUrl();
+                if (fileName != null && !fileName.isEmpty()) {
+                    try (InputStream is = getAssets().open("images/products/" + fileName)) {
+                        Drawable d = Drawable.createFromStream(is, null);
+                        ivPhoto.setImageDrawable(d);
+                    } catch (IOException e) {
+                        ivPhoto.setImageResource(android.R.drawable.ic_menu_report_image);
+                    }
+                } else {
+                    ivPhoto.setImageResource(android.R.drawable.ic_menu_report_image);
+                }
                 
                 viewModel.getCategories().observe(this, categories -> {
                     String categoryName = "Неизвестно";

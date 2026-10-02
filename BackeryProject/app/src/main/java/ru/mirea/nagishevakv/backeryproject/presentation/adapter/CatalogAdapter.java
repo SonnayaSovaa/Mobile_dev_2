@@ -1,5 +1,6 @@
 package ru.mirea.nagishevakv.backeryproject.presentation.adapter;
 
+import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +13,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -147,6 +150,19 @@ public class CatalogAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
         public void bind(Product product, Map<Product, Integer> cartMap, int discountCatId, String keyword, OnProductClickListener listener) {
             tvName.setText(product.getName());
+            
+            // Fixed image loading path and method
+            String fileName = product.getImageUrl();
+            if (fileName != null && !fileName.isEmpty()) {
+                try (InputStream is = itemView.getContext().getAssets().open("images/products/" + fileName)) {
+                    Drawable d = Drawable.createFromStream(is, null);
+                    ivProduct.setImageDrawable(d);
+                } catch (IOException e) {
+                    ivProduct.setImageResource(android.R.drawable.ic_menu_report_image);
+                }
+            } else {
+                ivProduct.setImageResource(android.R.drawable.ic_menu_report_image);
+            }
             
             boolean hasDiscount = (product.getCategoryId() == discountCatId);
             if (!hasDiscount && !keyword.isEmpty()) {

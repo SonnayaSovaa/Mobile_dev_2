@@ -1,5 +1,7 @@
 package ru.mirea.nagishevakv.backeryproject.presentation.adapter;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +13,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -85,6 +89,23 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
         public void bind(Product product, Map<Product, Integer> cartMap, OnCartQuantityChangeListener listener) {
             tvName.setText(product.getName());
             tvPrice.setText(String.format("%d ₽", product.getPrice()));
+
+            // Load image from assets/images/products/
+            String fileName = product.getImageUrl();
+            if (fileName != null && !fileName.isEmpty()) {
+                try (InputStream is = itemView.getContext().getAssets().open("images/products/" + fileName)) {
+                    Bitmap bitmap = BitmapFactory.decodeStream(is);
+                    if (bitmap != null) {
+                        ivProduct.setImageBitmap(bitmap);
+                    } else {
+                        ivProduct.setImageResource(android.R.drawable.ic_menu_report_image);
+                    }
+                } catch (IOException e) {
+                    ivProduct.setImageResource(android.R.drawable.ic_menu_report_image);
+                }
+            } else {
+                ivProduct.setImageResource(android.R.drawable.ic_menu_report_image);
+            }
 
             int quantity = cartMap != null && cartMap.get(product) != null ? cartMap.get(product) : 0;
 
