@@ -1,90 +1,149 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/cream_bg">
 
-    <LinearLayout
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="24dp">
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <com.google.android.material.imageview.ShapeableImageView
-            android:id="@+id/iv_detail_photo"
-            android:layout_width="match_parent"
-            android:layout_height="240dp"
-            android:scaleType="centerCrop"
-            android:src="@android:drawable/ic_menu_report_image"
-            android:background="@color/light_yellow"
-            app:shapeAppearanceOverlay="@style/RoundedImageView" />
-
-        <TextView
-            android:id="@+id/tv_detail_name"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Название товара"
-            android:textColor="@color/dark_brown"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+            android:orientation="vertical"
+            android:padding="24dp">
 
-        <TextView
-            android:id="@+id/tv_detail_category"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="Категория: Круассаны"
-            android:textColor="@color/light_brown"
-            android:textSize="14sp" />
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/iv_detail_photo"
+                android:layout_width="match_parent"
+                android:layout_height="240dp"
+                android:scaleType="centerCrop"
+                android:src="@android:drawable/ic_menu_report_image"
+                android:background="@color/light_yellow"
+                app:shapeAppearanceOverlay="@style/RoundedImageView" />
 
-        <TextView
-            android:id="@+id/tv_detail_weight"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="Вес/Объём: 80 грамм"
-            android:textColor="@color/gray_text"
-            android:textSize="14sp" />
+            <TextView
+                android:id="@+id/tv_detail_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Название товара"
+                android:textColor="@color/dark_brown"
+                android:textSize="24sp"
+                android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/tv_detail_price"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="150 ₽"
-            android:textColor="@color/warm_orange"
-            android:textSize="22sp"
-            android:textStyle="bold" />
+            <TextView
+                android:id="@+id/tv_detail_category"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Категория: Круассаны"
+                android:textColor="@color/light_brown"
+                android:textSize="14sp" />
 
-        <TextView
-            android:id="@+id/tv_detail_description"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Описание товара будет отображаться здесь во всех подробностях."
-            android:textColor="@color/dark_brown"
-            android:textSize="16sp"
-            android:lineSpacingMultiplier="1.2" />
+            <TextView
+                android:id="@+id/tv_detail_weight"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Вес/Объём: 80 грамм"
+                android:textColor="@color/gray_text"
+                android:textSize="14sp" />
 
-        <Button
-            android:id="@+id/btn_detail_add"
-            android:layout_width="match_parent"
-            android:layout_height="54dp"
-            android:layout_marginTop="24dp"
-            android:text="Добавить в корзину"
-            android:textColor="@color/white"
-            android:backgroundTint="@color/dark_brown" />
+            <TextView
+                android:id="@+id/tv_detail_price"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="150 ₽"
+                android:textColor="@color/warm_orange"
+                android:textSize="22sp"
+                android:textStyle="bold" />
 
-        <Button
-            android:id="@+id/btn_detail_back"
-            android:layout_width="match_parent"
-            android:layout_height="54dp"
-            android:layout_marginTop="12dp"
-            android:text="Назад в каталог"
-            android:textColor="@color/dark_brown"
-            android:backgroundTint="@color/light_yellow"
-            style="?android:attr/borderlessButtonStyle"/>
-    </LinearLayout>
-</ScrollView>
+            <TextView
+                android:id="@+id/tv_detail_description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Описание товара будет отображаться здесь во всех подробностях."
+                android:textColor="@color/dark_brown"
+                android:textSize="16sp"
+                android:lineSpacingMultiplier="1.2" />
+
+            <Button
+                android:id="@+id/btn_detail_add"
+                android:layout_width="match_parent"
+                android:layout_height="54dp"
+                android:layout_marginTop="24dp"
+                android:text="Добавить в корзину"
+                android:textColor="@color/white"
+                android:backgroundTint="@color/dark_brown" />
+
+            <Button
+                android:id="@+id/btn_detail_back"
+                android:layout_width="match_parent"
+                android:layout_height="54dp"
+                android:layout_marginTop="12dp"
+                android:text="Назад в каталог"
+                android:textColor="@color/dark_brown"
+                android:backgroundTint="@color/light_yellow"
+                style="?android:attr/borderlessButtonStyle"/>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="24dp"
+                android:background="#E0E0E0" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Комментарии"
+                android:textColor="@color/dark_brown"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/layout_add_comment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/et_comment"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="Оставьте комментарий..."
+                    android:background="@android:drawable/editbox_background_normal"
+                    android:padding="12dp"
+                    android:textSize="14sp" />
+
+                <ImageButton
+                    android:id="@+id/btn_send_comment"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginStart="8dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@android:drawable/ic_menu_send"
+                    app:tint="@color/warm_orange" />
+            </LinearLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_comments"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:nestedScrollingEnabled="false"
+                tools:listitem="@layout/item_comment" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -19,11 +19,14 @@ public interface BakeryRepository {
     // SharedPreferences & User Profile
     LiveData<User> getClientInfo();
     void saveClientInfo(User user);
+    void updateUserPhoto(String photoUrl);
     
     // Data from Room / Network
     LiveData<List<Product>> getProducts();
     LiveData<List<Category>> getCategories();
     LiveData<List<Comment>> getComments(int productId);
+    void addComment(Comment comment);
+    void deleteComment(int commentId);
     LiveData<List<Order>> getOrders();
     
     // Cart

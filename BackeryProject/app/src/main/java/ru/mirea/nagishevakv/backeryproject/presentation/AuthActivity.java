@@ -1,11 +1,16 @@
 package ru.mirea.nagishevakv.backeryproject.presentation;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 import ru.mirea.nagishevakv.backeryproject.MainActivity;
 import ru.mirea.nagishevakv.backeryproject.databinding.ActivityAuthBinding;
@@ -22,6 +27,13 @@ public class AuthActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         viewModel = new ViewModelProvider(this).get(BakeryViewModel.class);
+
+        try (InputStream is = getAssets().open("images/logos/Big_logo.png")) {
+            Bitmap bitmap = BitmapFactory.decodeStream(is);
+            binding.ivLogo.setImageBitmap(bitmap);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         binding.btnLogin.setOnClickListener(v -> {
             String email = binding.etEmail.getText().toString().trim();

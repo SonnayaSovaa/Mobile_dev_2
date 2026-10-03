@@ -31,6 +31,9 @@ public interface BakeryDao {
     @Query("SELECT * FROM users WHERE id = :userId")
     LiveData<UserEntity> getUserById(String userId);
 
+    @Query("SELECT * FROM users WHERE id = :userId")
+    UserEntity getUserByIdSync(String userId);
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertUser(UserEntity user);
 
@@ -39,6 +42,9 @@ public interface BakeryDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertComment(CommentEntity comment);
+
+    @Query("DELETE FROM comments WHERE id = :commentId")
+    void deleteCommentById(int commentId);
 
     @Query("SELECT * FROM orders")
     LiveData<List<OrderEntity>> getAllOrders();

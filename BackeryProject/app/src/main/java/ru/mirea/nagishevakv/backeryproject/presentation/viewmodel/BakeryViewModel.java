@@ -7,6 +7,8 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Locale;
@@ -21,6 +23,7 @@ import ru.mirea.nagishevakv.backeryproject.data.network.weather.WeatherApi;
 import ru.mirea.nagishevakv.backeryproject.data.network.weather.WeatherResponse;
 import ru.mirea.nagishevakv.backeryproject.data.repository.BakeryRepositoryImpl;
 import ru.mirea.nagishevakv.backeryproject.domain.model.Category;
+import ru.mirea.nagishevakv.backeryproject.domain.model.Comment;
 import ru.mirea.nagishevakv.backeryproject.domain.model.Order;
 import ru.mirea.nagishevakv.backeryproject.domain.model.Product;
 import ru.mirea.nagishevakv.backeryproject.domain.model.User;
@@ -107,8 +110,22 @@ public class BakeryViewModel extends AndroidViewModel {
     public LiveData<List<Product>> getProducts() { return filteredProducts; }
     public LiveData<List<Category>> getCategories() { return repository.getCategories(); }
     public LiveData<User> getClientInfo() { return repository.getClientInfo(); }
-    public LiveData<Map<Product, Integer>> getCartItems() { return getCartUseCase.execute(); }
+    public void updateAvatar(String photoUrl) { repository.updateUserPhoto(photoUrl); }
     public LiveData<List<Order>> getOrders() { return repository.getOrders(); }
+
+    public LiveData<List<Comment>> getComments(int productId) { return repository.getComments(productId); }
+    public void postComment(int productId, String text) {
+        User user = repository.getClientInfo().getValue();
+        if (user == null || text.trim().isEmpty()) return;
+        
+        String date = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(new Date());
+        Comment comment = new Comment(0, text, user.getId(), productId, user.getNickname(), user.getPhotoUrl(), date);
+        repository.addComment(comment);
+    }
+    
+    public void deleteComment(int commentId) {
+        repository.deleteComment(commentId);
+    }
 
     public void setNameFilter(String name) { nameFilter.setValue(name); }
     public void setMaxPriceFilter(Double price) { maxPriceFilter.setValue(price == null ? Double.MAX_VALUE : price); }
@@ -121,6 +138,7 @@ public class BakeryViewModel extends AndroidViewModel {
     public void addToCart(Product product) { manageCartUseCase.add(product); }
     public void removeFromCart(Product product) { manageCartUseCase.remove(product); }
     public void clearCart() { manageCartUseCase.clear(); }
+    public LiveData<Map<Product, Integer>> getCartItems() { return getCartUseCase.execute(); }
     public void checkout(double cost, int itemCount, String desc, String city) { repository.createOrder(cost, itemCount, desc, city); }
 
     public LiveData<String> getTemperature() { return temperature; }

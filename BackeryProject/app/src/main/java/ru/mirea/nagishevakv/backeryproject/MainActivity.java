@@ -3,23 +3,27 @@ package ru.mirea.nagishevakv.backeryproject;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -27,6 +31,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.button.MaterialButton;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,11 +41,14 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import ru.mirea.nagishevakv.backeryproject.domain.model.Category;
+import ru.mirea.nagishevakv.backeryproject.domain.model.Comment;
 import ru.mirea.nagishevakv.backeryproject.domain.model.Product;
+import ru.mirea.nagishevakv.backeryproject.domain.model.User;
 import ru.mirea.nagishevakv.backeryproject.presentation.AuthActivity;
 import ru.mirea.nagishevakv.backeryproject.presentation.adapter.CartAdapter;
 import ru.mirea.nagishevakv.backeryproject.presentation.adapter.CatalogAdapter;
 import ru.mirea.nagishevakv.backeryproject.presentation.adapter.CategoryNavAdapter;
+import ru.mirea.nagishevakv.backeryproject.presentation.adapter.CommentsAdapter;
 import ru.mirea.nagishevakv.backeryproject.presentation.adapter.OrderBillAdapter;
 import ru.mirea.nagishevakv.backeryproject.presentation.adapter.OrdersHistoryAdapter;
 import ru.mirea.nagishevakv.backeryproject.presentation.viewmodel.BakeryViewModel;
@@ -51,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
     private FrameLayout container;
     private BottomNavigationView bottomNavigation;
     private final String[] cities = {"Выберите город", "Moscow", "London", "Paris", "Berlin", "Tokyo", "New York", "Dubai"};
+    private ActivityResultLauncher<Intent> avatarPickerLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +69,21 @@ public class MainActivity extends AppCompatActivity {
         viewModel = new ViewModelProvider(this).get(BakeryViewModel.class);
         container = findViewById(R.id.container);
         bottomNavigation = findViewById(R.id.bottom_navigation);
+
+        avatarPickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        Uri imageUri = result.getData().getData();
+                        if (imageUri != null) {
+                            try {
+                                getContentResolver().takePersistableUriPermission(imageUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            } catch (SecurityException ignored) {}
+                            viewModel.updateAvatar(imageUri.toString());
+                        }
+                    }
+                }
+        );
 
         updateBottomNavigationVisibility();
 
@@ -246,6 +270,7 @@ public class MainActivity extends AppCompatActivity {
         View view = inflater.inflate(R.layout.screen_account, container, false);
         LinearLayout layoutAuthorized = view.findViewById(R.id.layout_authorized);
         LinearLayout layoutGuest = view.findViewById(R.id.layout_guest);
+        ImageView ivAvatar = view.findViewById(R.id.iv_avatar);
         
         if (viewModel.isAuthorized()) {
             layoutAuthorized.setVisibility(View.VISIBLE);
@@ -255,20 +280,42 @@ public class MainActivity extends AppCompatActivity {
             TextView tvOrderCount = view.findViewById(R.id.tv_order_count);
             Button btnGoToCart = view.findViewById(R.id.btn_go_to_cart);
             Button btnLogout = view.findViewById(R.id.btn_logout);
-            Button btnOrdersHistory = new Button(this);
+            
+            MaterialButton btnOrdersHistory = new MaterialButton(this);
             btnOrdersHistory.setText("История заказов");
+            btnOrdersHistory.setCornerRadius((int) (24 * getResources().getDisplayMetrics().density));
             btnOrdersHistory.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#5D4037")));
             btnOrdersHistory.setTextColor(android.graphics.Color.WHITE);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            params.setMargins(0, (int) (16 * getResources().getDisplayMetrics().density), 0, 0);
+            btnOrdersHistory.setLayoutParams(params);
             ((LinearLayout)layoutAuthorized).addView(btnOrdersHistory, 2);
 
             viewModel.getClientInfo().observe(this, user -> {
                 if (user != null) {
                     tvNickname.setText(user.getNickname());
                     tvEmail.setText(user.getEmail());
+                    if (user.getPhotoUrl() != null && !user.getPhotoUrl().isEmpty()) {
+                        ivAvatar.setImageURI(Uri.parse(user.getPhotoUrl()));
+                    } else {
+                        try (InputStream is = getAssets().open("images/logos/Logo_avatar.png")) {
+                            Bitmap bitmap = BitmapFactory.decodeStream(is);
+                            ivAvatar.setImageBitmap(bitmap);
+                        } catch (IOException e) {
+                            ivAvatar.setImageResource(android.R.drawable.sym_def_app_icon);
+                        }
+                    }
                 }
             });
             viewModel.getOrders().observe(this, orders -> {
                 tvOrderCount.setText(String.format(Locale.getDefault(), "Заказов: %d", orders.size()));
+            });
+
+            ivAvatar.setOnClickListener(v -> {
+                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.setType("image/*");
+                avatarPickerLauncher.launch(intent);
             });
 
             btnGoToCart.setOnClickListener(v -> viewModel.navigateTo("CART"));
@@ -277,6 +324,13 @@ public class MainActivity extends AppCompatActivity {
         } else {
             layoutAuthorized.setVisibility(View.GONE);
             layoutGuest.setVisibility(View.VISIBLE);
+            try (InputStream is = getAssets().open("images/logos/Logo_avatar.png")) {
+                Bitmap bitmap = BitmapFactory.decodeStream(is);
+                ivAvatar.setImageBitmap(bitmap);
+            } catch (IOException e) {
+                ivAvatar.setImageResource(android.R.drawable.sym_def_app_icon);
+            }
+            ivAvatar.setOnClickListener(null);
             view.findViewById(R.id.btn_login_account).setOnClickListener(v -> viewModel.logout());
         }
         container.addView(view);
@@ -291,6 +345,18 @@ public class MainActivity extends AppCompatActivity {
         TextView tvPrice = view.findViewById(R.id.tv_detail_price);
         TextView tvDescription = view.findViewById(R.id.tv_detail_description);
         Button btnAdd = view.findViewById(R.id.btn_detail_add);
+
+        // Comments section
+        RecyclerView rvComments = view.findViewById(R.id.rv_comments);
+        EditText etComment = view.findViewById(R.id.et_comment);
+        ImageButton btnSendComment = view.findViewById(R.id.btn_send_comment);
+        View layoutAddComment = view.findViewById(R.id.layout_add_comment);
+
+        CommentsAdapter commentsAdapter = new CommentsAdapter();
+        rvComments.setLayoutManager(new LinearLayoutManager(this));
+        rvComments.setAdapter(commentsAdapter);
+
+        layoutAddComment.setVisibility(viewModel.isAuthorized() ? View.VISIBLE : View.GONE);
 
         viewModel.getSelectedProduct().observe(this, product -> {
             if (product != null) {
@@ -314,6 +380,26 @@ public class MainActivity extends AppCompatActivity {
                 btnAdd.setOnClickListener(v -> {
                     if (viewModel.isAuthorized()) { viewModel.addToCart(product); Toast.makeText(this, "Добавлено!", Toast.LENGTH_SHORT).show(); }
                     else Toast.makeText(this, "Войдите для покупок", Toast.LENGTH_SHORT).show();
+                });
+
+                // Load and observe comments
+                viewModel.getClientInfo().observe(this, user -> {
+                    String userId = user != null ? user.getId() : null;
+                    viewModel.getComments(product.getId()).observe(this, comments -> {
+                        commentsAdapter.setData(comments, userId, comment -> {
+                            viewModel.deleteComment(comment.getId());
+                            Toast.makeText(this, "Комментарий удалён", Toast.LENGTH_SHORT).show();
+                        });
+                    });
+                });
+
+                btnSendComment.setOnClickListener(v -> {
+                    String text = etComment.getText().toString();
+                    if (!text.trim().isEmpty()) {
+                        viewModel.postComment(product.getId(), text);
+                        etComment.setText("");
+                        Toast.makeText(this, "Комментарий отправлен", Toast.LENGTH_SHORT).show();
+                    }
                 });
             }
         });
@@ -442,6 +528,15 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupAboutScreen(LayoutInflater inflater) {
         View view = inflater.inflate(R.layout.screen_about, container, false);
+        ImageView ivLogo = view.findViewById(R.id.iv_about_logo);
+        if (ivLogo != null) {
+            try (InputStream is = getAssets().open("images/logos/Big_logo.png")) {
+                Bitmap bitmap = BitmapFactory.decodeStream(is);
+                ivLogo.setImageBitmap(bitmap);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         view.findViewById(R.id.btn_about_to_catalog).setOnClickListener(v -> viewModel.navigateTo("CATALOG"));
         container.addView(view);
     }

@@ -76,8 +76,8 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
         private final Button btnAddToCart;
         private final LinearLayout llQuantityControl;
         private final TextView tvQuantity;
-        private final Button btnMinus;
-        private final Button btnPlus;
+        private final TextView btnMinus;
+        private final TextView btnPlus;
         private final TextView tvProductDiscount;
 
         public CartViewHolder(@NonNull View itemView) {

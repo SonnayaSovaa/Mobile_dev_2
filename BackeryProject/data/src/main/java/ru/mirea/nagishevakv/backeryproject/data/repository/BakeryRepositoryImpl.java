@@ -20,6 +20,7 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import ru.mirea.nagishevakv.backeryproject.data.local.dao.BakeryDao;
 import ru.mirea.nagishevakv.backeryproject.data.local.db.BakeryDatabase;
+import ru.mirea.nagishevakv.backeryproject.data.local.entity.CommentEntity;
 import ru.mirea.nagishevakv.backeryproject.data.local.entity.OrderEntity;
 import ru.mirea.nagishevakv.backeryproject.data.local.entity.ProductEntity;
 import ru.mirea.nagishevakv.backeryproject.data.local.entity.UserEntity;
@@ -40,6 +41,7 @@ public class BakeryRepositoryImpl implements BakeryRepository {
     private FirebaseAuth firebaseAuth;
     private final ExecutorService executor = Executors.newFixedThreadPool(4);
     private final MutableLiveData<Map<Product, Integer>> cartItems = new MutableLiveData<>(new HashMap<>());
+    private final MutableLiveData<User> clientInfo = new MutableLiveData<>();
 
     private BakeryRepositoryImpl(Context context) {
         this.bakeryDao = BakeryDatabase.getDatabase(context).bakeryDao();
@@ -50,6 +52,7 @@ public class BakeryRepositoryImpl implements BakeryRepository {
         } catch (Exception e) {
             Log.e(TAG, "Firebase not initialized", e);
         }
+        loadClientInfo();
     }
 
     public static synchronized BakeryRepositoryImpl getInstance(Context context) {
@@ -57,6 +60,14 @@ public class BakeryRepositoryImpl implements BakeryRepository {
             INSTANCE = new BakeryRepositoryImpl(context.getApplicationContext());
         }
         return INSTANCE;
+    }
+
+    private void loadClientInfo() {
+        String id = sharedPreferences.getString("user_id", "");
+        String name = sharedPreferences.getString("user_name", "Гость");
+        String email = sharedPreferences.getString("user_email", "");
+        String photo = sharedPreferences.getString("user_photo", "");
+        clientInfo.postValue(new User(id, name, email, photo, 0));
     }
 
     @Override
@@ -124,6 +135,7 @@ public class BakeryRepositoryImpl implements BakeryRepository {
     public void logout() {
         if (firebaseAuth != null) firebaseAuth.signOut();
         sharedPreferences.edit().clear().apply();
+        loadClientInfo();
         clearCart();
     }
 
@@ -135,12 +147,7 @@ public class BakeryRepositoryImpl implements BakeryRepository {
 
     @Override
     public LiveData<User> getClientInfo() {
-        MutableLiveData<User> data = new MutableLiveData<>();
-        String id = sharedPreferences.getString("user_id", "");
-        String name = sharedPreferences.getString("user_name", "Гость");
-        String email = sharedPreferences.getString("user_email", "");
-        data.setValue(new User(id, name, email, "", 0));
-        return data;
+        return clientInfo;
     }
 
     @Override
@@ -149,13 +156,31 @@ public class BakeryRepositoryImpl implements BakeryRepository {
                 .putString("user_id", user.getId())
                 .putString("user_name", user.getNickname())
                 .putString("user_email", user.getEmail())
+                .putString("user_photo", user.getPhotoUrl())
                 .apply();
+        loadClientInfo();
         if (!user.getId().startsWith("guest_")) {
             executor.execute(() -> {
                 try {
-                    bakeryDao.insertUser(new UserEntity(user.getId(), user.getNickname(), user.getEmail(), "", 0));
+                    bakeryDao.insertUser(new UserEntity(user.getId(), user.getNickname(), user.getEmail(), user.getPhotoUrl(), 0));
                 } catch (Exception e) {
                     Log.e(TAG, "Error saving user to DB", e);
+                }
+            });
+        }
+    }
+
+    @Override
+    public void updateUserPhoto(String photoUrl) {
+        sharedPreferences.edit().putString("user_photo", photoUrl).apply();
+        loadClientInfo();
+        String userId = sharedPreferences.getString("user_id", "");
+        if (!userId.isEmpty()) {
+            executor.execute(() -> {
+                UserEntity entity = bakeryDao.getUserByIdSync(userId);
+                if (entity != null) {
+                    entity.photoUrl = photoUrl;
+                    bakeryDao.insertUser(entity);
                 }
             });
         }
@@ -190,8 +215,40 @@ public class BakeryRepositoryImpl implements BakeryRepository {
 
     @Override
     public LiveData<List<Category>> getCategories() { return networkApi.getCategories(); }
+
     @Override
-    public LiveData<List<Comment>> getComments(int productId) { return new MutableLiveData<>(new ArrayList<>()); }
+    public LiveData<List<Comment>> getComments(int productId) {
+        MediatorLiveData<List<Comment>> mediator = new MediatorLiveData<>();
+        mediator.addSource(bakeryDao.getCommentsForProduct(productId), entities -> {
+            if (entities != null) {
+                mediator.setValue(entities.stream()
+                        .map(e -> new Comment(e.id, e.text, e.userId, e.productId, e.userName, e.userPhotoUrl, e.date))
+                        .collect(Collectors.toList()));
+            }
+        });
+        return mediator;
+    }
+
+    @Override
+    public void addComment(Comment comment) {
+        executor.execute(() -> {
+            bakeryDao.insertComment(new CommentEntity(
+                    comment.getText(),
+                    comment.getUserId(),
+                    comment.getProductId(),
+                    comment.getUserName(),
+                    comment.getUserPhotoUrl(),
+                    comment.getDate()
+            ));
+        });
+    }
+
+    @Override
+    public void deleteComment(int commentId) {
+        executor.execute(() -> {
+            bakeryDao.deleteCommentById(commentId);
+        });
+    }
     
     @Override
     public LiveData<List<Order>> getOrders() {

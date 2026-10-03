@@ -10,10 +10,16 @@ public class CommentEntity {
     public String text;
     public String userId;
     public int productId;
+    public String userName;
+    public String userPhotoUrl;
+    public String date;
 
-    public CommentEntity(String text, String userId, int productId) {
+    public CommentEntity(String text, String userId, int productId, String userName, String userPhotoUrl, String date) {
         this.text = text;
         this.userId = userId;
         this.productId = productId;
+        this.userName = userName;
+        this.userPhotoUrl = userPhotoUrl;
+        this.date = date;
     }
 }
