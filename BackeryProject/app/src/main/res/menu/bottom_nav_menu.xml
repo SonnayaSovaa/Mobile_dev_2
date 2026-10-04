@@ -3,25 +3,21 @@
     <item
         android:id="@+id/nav_catalog"
         android:icon="@drawable/ic_catalog"
-        android:title="Каталог" />
+        android:title="@string/nav_catalog" />
     <item
         android:id="@+id/nav_cart"
         android:icon="@drawable/ic_cart"
-        android:title="Корзина" />
+        android:title="@string/nav_cart" />
     <item
         android:id="@+id/nav_orders"
         android:icon="@android:drawable/ic_menu_agenda"
-        android:title="Мои заказы" />
+        android:title="@string/nav_orders" />
     <item
         android:id="@+id/nav_weather"
         android:icon="@android:drawable/ic_menu_today"
-        android:title="Погода" />
+        android:title="@string/nav_weather" />
     <item
         android:id="@+id/nav_account"
         android:icon="@drawable/ic_account"
-        android:title="Аккаунт" />
-    <item
-        android:id="@+id/nav_about"
-        android:icon="@drawable/ic_info"
-        android:title="О компании" />
+        android:title="@string/nav_account" />
 </menu>

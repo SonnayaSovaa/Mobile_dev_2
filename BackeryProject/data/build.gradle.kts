@@ -4,7 +4,7 @@ plugins {
 
 android {
     namespace = "ru.mirea.nagishevakv.backeryproject.data"
-    compileSdk = 36
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 26

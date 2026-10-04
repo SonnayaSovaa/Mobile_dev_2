@@ -114,9 +114,6 @@ public class MainActivity extends AppCompatActivity {
             } else if (id == R.id.nav_account) {
                 viewModel.navigateTo("ACCOUNT");
                 return true;
-            } else if (id == R.id.nav_about) {
-                viewModel.navigateTo("ABOUT");
-                return true;
             }
             return false;
         });
@@ -277,6 +274,7 @@ public class MainActivity extends AppCompatActivity {
             layoutGuest.setVisibility(View.GONE);
             TextView tvNickname = view.findViewById(R.id.tv_nickname);
             TextView tvEmail = view.findViewById(R.id.tv_email);
+            TextView tvRating = view.findViewById(R.id.tv_rating);
             TextView tvOrderCount = view.findViewById(R.id.tv_order_count);
             Button btnGoToCart = view.findViewById(R.id.btn_go_to_cart);
             Button btnLogout = view.findViewById(R.id.btn_logout);
@@ -289,12 +287,13 @@ public class MainActivity extends AppCompatActivity {
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             params.setMargins(0, (int) (16 * getResources().getDisplayMetrics().density), 0, 0);
             btnOrdersHistory.setLayoutParams(params);
-            ((LinearLayout)layoutAuthorized).addView(btnOrdersHistory, 2);
+            ((LinearLayout)layoutAuthorized).addView(btnOrdersHistory, 3);
 
             viewModel.getClientInfo().observe(this, user -> {
                 if (user != null) {
                     tvNickname.setText(user.getNickname());
                     tvEmail.setText(user.getEmail());
+                    tvRating.setText(String.format(Locale.getDefault(), "Рейтинг: %.1f", user.getRating()));
                     if (user.getPhotoUrl() != null && !user.getPhotoUrl().isEmpty()) {
                         ivAvatar.setImageURI(Uri.parse(user.getPhotoUrl()));
                     } else {

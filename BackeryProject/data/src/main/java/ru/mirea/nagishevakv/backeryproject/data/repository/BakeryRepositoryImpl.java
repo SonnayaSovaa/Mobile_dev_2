@@ -6,6 +6,7 @@ import android.util.Log;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import java.text.SimpleDateFormat;
@@ -47,10 +48,16 @@ public class BakeryRepositoryImpl implements BakeryRepository {
         this.bakeryDao = BakeryDatabase.getDatabase(context).bakeryDao();
         this.networkApi = new NetworkApi();
         this.sharedPreferences = context.getSharedPreferences("bakery_prefs", Context.MODE_PRIVATE);
+        
         try {
-            this.firebaseAuth = FirebaseAuth.getInstance();
+            // Check if Firebase is initialized before getting instance
+            if (!FirebaseApp.getApps(context).isEmpty()) {
+                this.firebaseAuth = FirebaseAuth.getInstance();
+            } else {
+                Log.w(TAG, "Firebase not initialized. Using local auth only.");
+            }
         } catch (Exception e) {
-            Log.e(TAG, "Firebase not initialized", e);
+            Log.e(TAG, "Error initializing Firebase Auth", e);
         }
         loadClientInfo();
     }
@@ -67,7 +74,8 @@ public class BakeryRepositoryImpl implements BakeryRepository {
         String name = sharedPreferences.getString("user_name", "Гость");
         String email = sharedPreferences.getString("user_email", "");
         String photo = sharedPreferences.getString("user_photo", "");
-        clientInfo.postValue(new User(id, name, email, photo, 0));
+        float rating = sharedPreferences.getFloat("user_rating", 5.0f);
+        clientInfo.postValue(new User(id, name, email, photo, 0, rating));
     }
 
     @Override
@@ -83,11 +91,13 @@ public class BakeryRepositoryImpl implements BakeryRepository {
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful() && firebaseAuth.getCurrentUser() != null) {
                         FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
-                        User user = new User(firebaseUser.getUid(), "User", firebaseUser.getEmail(), "", 0);
+                        User user = new User(firebaseUser.getUid(), "User", firebaseUser.getEmail(), "", 0, 5.0);
                         saveClientInfo(user);
                         result.setValue(true);
                     } else {
-                        Log.e(TAG, "Firebase Login failed, falling back to local", task.getException());
+                        // If configuration is not found, it's likely a setup issue, fall back to local
+                        Log.w(TAG, "Firebase Login failed (possibly missing config), falling back to local: " + 
+                                (task.getException() != null ? task.getException().getMessage() : "Unknown error"));
                         performLocalAuth(email, email.split("@")[0], result);
                     }
                 });
@@ -110,11 +120,12 @@ public class BakeryRepositoryImpl implements BakeryRepository {
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful() && firebaseAuth.getCurrentUser() != null) {
                         String uid = firebaseAuth.getCurrentUser().getUid();
-                        User user = new User(uid, nickname, email, "", 0);
+                        User user = new User(uid, nickname, email, "", 0, 5.0);
                         saveClientInfo(user);
                         result.setValue(true);
                     } else {
-                        Log.e(TAG, "Firebase Registration failed, falling back to local", task.getException());
+                        Log.w(TAG, "Firebase Registration failed, falling back to local: " + 
+                                (task.getException() != null ? task.getException().getMessage() : "Unknown error"));
                         performLocalAuth(email, nickname, result);
                     }
                 });
@@ -125,15 +136,21 @@ public class BakeryRepositoryImpl implements BakeryRepository {
     }
 
     private void performLocalAuth(String email, String nickname, MutableLiveData<Boolean> result) {
-        String uid = "local_" + email.hashCode();
-        User user = new User(uid, nickname, email, "", 0);
+        String uid = "local_" + Math.abs(email.hashCode());
+        User user = new User(uid, nickname, email, "", 0, 5.0);
         saveClientInfo(user);
         result.setValue(true);
     }
 
     @Override
     public void logout() {
-        if (firebaseAuth != null) firebaseAuth.signOut();
+        if (firebaseAuth != null) {
+            try {
+                firebaseAuth.signOut();
+            } catch (Exception e) {
+                Log.e(TAG, "Error during Firebase sign out", e);
+            }
+        }
         sharedPreferences.edit().clear().apply();
         loadClientInfo();
         clearCart();
@@ -157,12 +174,13 @@ public class BakeryRepositoryImpl implements BakeryRepository {
                 .putString("user_name", user.getNickname())
                 .putString("user_email", user.getEmail())
                 .putString("user_photo", user.getPhotoUrl())
+                .putFloat("user_rating", (float) user.getRating())
                 .apply();
         loadClientInfo();
-        if (!user.getId().startsWith("guest_")) {
+        if (user.getId() != null && !user.getId().startsWith("guest_")) {
             executor.execute(() -> {
                 try {
-                    bakeryDao.insertUser(new UserEntity(user.getId(), user.getNickname(), user.getEmail(), user.getPhotoUrl(), 0));
+                    bakeryDao.insertUser(new UserEntity(user.getId(), user.getNickname(), user.getEmail(), user.getPhotoUrl(), 0, user.getRating()));
                 } catch (Exception e) {
                     Log.e(TAG, "Error saving user to DB", e);
                 }
@@ -180,6 +198,25 @@ public class BakeryRepositoryImpl implements BakeryRepository {
                 UserEntity entity = bakeryDao.getUserByIdSync(userId);
                 if (entity != null) {
                     entity.photoUrl = photoUrl;
+                    bakeryDao.insertUser(entity);
+                }
+            });
+        }
+    }
+
+    @Override
+    public void updateUserRating(double delta) {
+        float currentRating = sharedPreferences.getFloat("user_rating", 5.0f);
+        float newRating = Math.max(0, Math.min(10, currentRating + (float) delta));
+        sharedPreferences.edit().putFloat("user_rating", newRating).apply();
+        loadClientInfo();
+        
+        String userId = sharedPreferences.getString("user_id", "");
+        if (!userId.isEmpty()) {
+            executor.execute(() -> {
+                UserEntity entity = bakeryDao.getUserByIdSync(userId);
+                if (entity != null) {
+                    entity.rating = newRating;
                     bakeryDao.insertUser(entity);
                 }
             });

@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="24dp"
+    android:padding="80dp"
     android:background="@color/cream_bg"
     android:gravity="center_horizontal">
 
@@ -58,13 +58,23 @@
             android:layout_marginTop="4dp"/>
 
         <TextView
+            android:id="@+id/tv_rating"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Рейтинг: 5.0"
+            android:textSize="18sp"
+            android:textColor="@color/accent_brown"
+            android:layout_marginTop="8dp"
+            android:textStyle="bold"/>
+
+        <TextView
             android:id="@+id/tv_order_count"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Количество заказов: 0"
             android:textSize="16sp"
             android:textColor="@color/dark_brown"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="8dp"
             android:textStyle="italic"/>
 
         <Button

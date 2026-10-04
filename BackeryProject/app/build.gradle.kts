@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace = "ru.mirea.nagishevakv.backeryproject"
-    compileSdk = 36
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "ru.mirea.nagishevakv.backeryproject"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -32,6 +32,11 @@ android {
     }
     buildFeatures {
         viewBinding = true
+    }
+    
+    // TensorFlow Lite models are usually compressed, we need to tell aapt not to compress them
+    aaptOptions {
+        noCompress("tflite")
     }
 }
 
@@ -58,6 +63,11 @@ dependencies {
     // Retrofit for Weather API
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson)
+
+    // TensorFlow Lite
+    implementation(libs.tensorflow.lite)
+    implementation(libs.tensorflow.lite.support)
+    implementation(libs.tensorflow.lite.metadata)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

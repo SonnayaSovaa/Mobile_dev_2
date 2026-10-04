@@ -33,6 +33,7 @@ import ru.mirea.nagishevakv.backeryproject.domain.usecase.GetProductsUseCase;
 import ru.mirea.nagishevakv.backeryproject.domain.usecase.LoginUseCase;
 import ru.mirea.nagishevakv.backeryproject.domain.usecase.ManageCartUseCase;
 import ru.mirea.nagishevakv.backeryproject.domain.usecase.RegisterUseCase;
+import ru.mirea.nagishevakv.backeryproject.presentation.ToxicityClassifier;
 
 public class BakeryViewModel extends AndroidViewModel {
     private final BakeryRepository repository;
@@ -41,8 +42,9 @@ public class BakeryViewModel extends AndroidViewModel {
     private final GetProductsUseCase getProductsUseCase;
     private final GetCartUseCase getCartUseCase;
     private final ManageCartUseCase manageCartUseCase;
+    private final ToxicityClassifier toxicityClassifier;
 
-    private final MutableLiveData<String> currentScreen = new MutableLiveData<>("AUTH");
+    private final MutableLiveData<String> currentScreen = new MutableLiveData<>("CATALOG");
     private final MutableLiveData<Product> selectedProduct = new MutableLiveData<>();
     
     // Weather & City sync
@@ -70,6 +72,7 @@ public class BakeryViewModel extends AndroidViewModel {
         this.getProductsUseCase = new GetProductsUseCase(repository);
         this.getCartUseCase = new GetCartUseCase(repository);
         this.manageCartUseCase = new ManageCartUseCase(repository);
+        this.toxicityClassifier = new ToxicityClassifier(application);
 
         this.productsSource = getProductsUseCase.execute();
         filteredProducts.addSource(productsSource, products -> applyFilters());
@@ -82,9 +85,9 @@ public class BakeryViewModel extends AndroidViewModel {
         List<Product> products = productsSource.getValue();
         if (products == null) return;
 
-        String name = nameFilter.getValue().toLowerCase();
-        double price = maxPriceFilter.getValue();
-        int catId = categoryFilter.getValue();
+        String name = nameFilter.getValue() != null ? nameFilter.getValue().toLowerCase() : "";
+        double price = maxPriceFilter.getValue() != null ? maxPriceFilter.getValue() : Double.MAX_VALUE;
+        int catId = categoryFilter.getValue() != null ? categoryFilter.getValue() : -1;
 
         List<Product> result = products.stream()
                 .filter(p -> p.getName().toLowerCase().contains(name))
@@ -101,7 +104,7 @@ public class BakeryViewModel extends AndroidViewModel {
     public void selectProduct(Product product) { selectedProduct.setValue(product); navigateTo("DETAIL"); }
     public LiveData<Boolean> login(String email, String password) { return loginUseCase.execute(email, password); }
     public void loginAsGuest() {
-        User guest = new User("guest_" + System.currentTimeMillis(), "Гость", "", "", 0);
+        User guest = new User("guest_" + System.currentTimeMillis(), "Гость", "", "", 0, 5.0);
         repository.saveClientInfo(guest);
     }
     public boolean isAuthorized() { return repository.isAuthorized(); }
@@ -111,6 +114,7 @@ public class BakeryViewModel extends AndroidViewModel {
     public LiveData<List<Category>> getCategories() { return repository.getCategories(); }
     public LiveData<User> getClientInfo() { return repository.getClientInfo(); }
     public void updateAvatar(String photoUrl) { repository.updateUserPhoto(photoUrl); }
+    public void updateUserRating(double delta) { repository.updateUserRating(delta); }
     public LiveData<List<Order>> getOrders() { return repository.getOrders(); }
 
     public LiveData<List<Comment>> getComments(int productId) { return repository.getComments(productId); }
@@ -118,6 +122,21 @@ public class BakeryViewModel extends AndroidViewModel {
         User user = repository.getClientInfo().getValue();
         if (user == null || text.trim().isEmpty()) return;
         
+        // Анализ токсичности
+        double score = toxicityClassifier.getToxicityScore(text);
+        double delta;
+        if (score > 0.1) {
+            delta = -score;
+        } else if (score < -0.1) {
+            delta = -score;
+        } else {
+            delta = 0;
+        }
+        
+        if (delta != 0) {
+            updateUserRating(delta);
+        }
+
         String date = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(new Date());
         Comment comment = new Comment(0, text, user.getId(), productId, user.getNickname(), user.getPhotoUrl(), date);
         repository.addComment(comment);
@@ -137,6 +156,7 @@ public class BakeryViewModel extends AndroidViewModel {
 
     public void addToCart(Product product) { manageCartUseCase.add(product); }
     public void removeFromCart(Product product) { manageCartUseCase.remove(product); }
+    public void delay(long ms) { try { Thread.sleep(ms); } catch (InterruptedException ignored) {} }
     public void clearCart() { manageCartUseCase.clear(); }
     public LiveData<Map<Product, Integer>> getCartItems() { return getCartUseCase.execute(); }
     public void checkout(double cost, int itemCount, String desc, String city) { repository.createOrder(cost, itemCount, desc, city); }
@@ -167,7 +187,7 @@ public class BakeryViewModel extends AndroidViewModel {
                 if (response.isSuccessful() && response.body() != null) {
                     WeatherResponse w = response.body();
                     temperature.postValue(String.format(Locale.getDefault(), "%.1f°C", w.main.temp));
-                    weatherDescription.postValue(w.weather[0].description);
+                    weatherDescription.postValue(w.weather != null && w.weather.length > 0 ? w.weather[0].description : "");
                     calculateDiscounts(w);
                 } else {
                     temperature.postValue("Ошибка");
@@ -185,6 +205,7 @@ public class BakeryViewModel extends AndroidViewModel {
     }
 
     private void calculateDiscounts(WeatherResponse w) {
+        if (w == null || w.main == null || w.weather == null || w.weather.length == 0) return;
         float temp = w.main.temp;
         String desc = w.weather[0].description.toLowerCase();
         

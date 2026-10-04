@@ -8,7 +8,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp"
+        android:padding="80dp"
         android:gravity="center_horizontal">
 
         <ImageView
@@ -31,7 +31,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Наша главная цель — выпекать самый вкусный, ароматный и хрустящий хлеб, круассаны и пончики в городе, используя исключительно натуральные ингредиенты высшего качества.\n\nМы придерживаемся принципов честности, традиционных рецептур и бесконечной любви к своему делу. Каждый день наши мастера создают кулинарные шедевры специально для вас."
+            android:text="Наша главная цель — выпекать самый вкусный, ароматный и хрустящий хлеб, круассаны и пончики в городе, используя исключительно натуральные ингредиенты высшего качества.\n\nМы придерживаемся принципов честности, традиционных рецептур и бесконейной любви к своему делу. Каждый день наши мастера создают кулинарные шедевры специально для вас."
             android:textColor="@color/dark_brown"
             android:textSize="16sp"
             android:lineSpacingMultiplier="1.3"

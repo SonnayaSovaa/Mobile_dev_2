@@ -20,6 +20,7 @@ public interface BakeryRepository {
     LiveData<User> getClientInfo();
     void saveClientInfo(User user);
     void updateUserPhoto(String photoUrl);
+    void updateUserRating(double delta);
     
     // Data from Room / Network
     LiveData<List<Product>> getProducts();

@@ -13,12 +13,14 @@ public class UserEntity {
     public String email;
     public String photoUrl;
     public int orderCount;
+    public double rating;
 
-    public UserEntity(@NonNull String id, String nickname, String email, String photoUrl, int orderCount) {
+    public UserEntity(@NonNull String id, String nickname, String email, String photoUrl, int orderCount, double rating) {
         this.id = id;
         this.nickname = nickname;
         this.email = email;
         this.photoUrl = photoUrl;
         this.orderCount = orderCount;
+        this.rating = rating;
     }
 }

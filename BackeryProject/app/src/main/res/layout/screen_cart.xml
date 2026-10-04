@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@color/cream_bg"
-    android:padding="16dp">
+    android:padding="80dp">
 
     <TextView
         android:id="@+id/tv_cart_summary"

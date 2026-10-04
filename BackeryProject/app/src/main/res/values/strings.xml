@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">CatBake</string>
+    <string name="nav_catalog">Каталог</string>
+    <string name="nav_cart">Корзина</string>
+    <string name="nav_orders">Заказы</string>
+    <string name="nav_weather">Погода</string>
+    <string name="nav_account">Аккаунт</string>
+    <string name="nav_about">О приложении</string>
 </resources>
