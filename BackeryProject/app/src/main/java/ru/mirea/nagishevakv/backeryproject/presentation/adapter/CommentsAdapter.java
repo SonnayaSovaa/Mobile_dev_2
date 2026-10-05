@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import ru.mirea.nagishevakv.backeryproject.R;
 import ru.mirea.nagishevakv.backeryproject.domain.model.Comment;
@@ -56,6 +57,7 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.Commen
     static class CommentViewHolder extends RecyclerView.ViewHolder {
         private final ImageView ivAvatar;
         private final TextView tvNickname;
+        private final TextView tvRating;
         private final TextView tvDate;
         private final TextView tvText;
         private final ImageButton btnDelete;
@@ -64,6 +66,7 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.Commen
             super(itemView);
             ivAvatar = itemView.findViewById(R.id.iv_user_avatar);
             tvNickname = itemView.findViewById(R.id.tv_nickname);
+            tvRating = itemView.findViewById(R.id.tv_user_rating);
             tvDate = itemView.findViewById(R.id.tv_date);
             tvText = itemView.findViewById(R.id.tv_comment_text);
             btnDelete = itemView.findViewById(R.id.btn_delete_comment);
@@ -71,6 +74,7 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.Commen
 
         public void bind(Comment comment, String currentUserId, OnDeleteClickListener listener) {
             tvNickname.setText(comment.getUserName());
+            tvRating.setText(String.format(Locale.getDefault(), "★ %.1f", comment.getUserRating()));
             tvDate.setText(comment.getDate());
             tvText.setText(comment.getText());
             ivAvatar.setImageResource(android.R.drawable.ic_menu_gallery);

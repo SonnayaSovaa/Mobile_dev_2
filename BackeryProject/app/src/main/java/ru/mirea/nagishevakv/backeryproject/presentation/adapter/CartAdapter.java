@@ -136,7 +136,6 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
             llQuantityControl.setVisibility(View.VISIBLE);
             tvQuantity.setText(String.valueOf(quantity));
 
-            // Set text color for + and - buttons in the cart
             int color = itemView.getContext().getColor(R.color.dark_brown);
             btnMinus.setTextColor(color);
             btnPlus.setTextColor(color);

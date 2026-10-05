@@ -71,15 +71,12 @@ public class CategoryNavAdapter extends RecyclerView.Adapter<CategoryNavAdapter.
         public void bind(Category category, OnCategoryClickListener listener, int selectedId) {
             btnCategory.setText(category.getName());
             
-            // Text color is always brown as requested
             int brownColor = Color.parseColor("#5D4037");
             btnCategory.setTextColor(brownColor);
 
             if (category.getId() == selectedId) {
-                // When selected, background is orange (to keep brown text readable)
                 btnCategory.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#FF9800")));
             } else {
-                // When not selected, background is light orange
                 btnCategory.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#FFE0B2")));
             }
             btnCategory.setOnClickListener(v -> listener.onCategoryClick(category.getId()));

@@ -35,15 +35,12 @@ import com.google.android.material.button.MaterialButton;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import ru.mirea.nagishevakv.backeryproject.domain.model.Category;
-import ru.mirea.nagishevakv.backeryproject.domain.model.Comment;
 import ru.mirea.nagishevakv.backeryproject.domain.model.Product;
-import ru.mirea.nagishevakv.backeryproject.domain.model.User;
 import ru.mirea.nagishevakv.backeryproject.presentation.AuthActivity;
 import ru.mirea.nagishevakv.backeryproject.presentation.adapter.CartAdapter;
 import ru.mirea.nagishevakv.backeryproject.presentation.adapter.CatalogAdapter;
@@ -287,13 +284,13 @@ public class MainActivity extends AppCompatActivity {
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             params.setMargins(0, (int) (16 * getResources().getDisplayMetrics().density), 0, 0);
             btnOrdersHistory.setLayoutParams(params);
-            ((LinearLayout)layoutAuthorized).addView(btnOrdersHistory, 3);
+            layoutAuthorized.addView(btnOrdersHistory, 3);
 
             viewModel.getClientInfo().observe(this, user -> {
                 if (user != null) {
                     tvNickname.setText(user.getNickname());
                     tvEmail.setText(user.getEmail());
-                    tvRating.setText(String.format(Locale.getDefault(), "Рейтинг: %.1f", user.getRating()));
+                    tvRating.setText(String.format(Locale.getDefault(), "Рейтинг: %.2f", user.getRating()));
                     if (user.getPhotoUrl() != null && !user.getPhotoUrl().isEmpty()) {
                         ivAvatar.setImageURI(Uri.parse(user.getPhotoUrl()));
                     } else {
@@ -306,9 +303,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             });
-            viewModel.getOrders().observe(this, orders -> {
-                tvOrderCount.setText(String.format(Locale.getDefault(), "Заказов: %d", orders.size()));
-            });
+            viewModel.getOrders().observe(this, orders -> tvOrderCount.setText(String.format(Locale.getDefault(), "Заказов: %d", orders.size())));
 
             ivAvatar.setOnClickListener(v -> {
                 Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
@@ -345,7 +340,6 @@ public class MainActivity extends AppCompatActivity {
         TextView tvDescription = view.findViewById(R.id.tv_detail_description);
         Button btnAdd = view.findViewById(R.id.btn_detail_add);
 
-        // Comments section
         RecyclerView rvComments = view.findViewById(R.id.rv_comments);
         EditText etComment = view.findViewById(R.id.et_comment);
         ImageButton btnSendComment = view.findViewById(R.id.btn_send_comment);
@@ -381,15 +375,12 @@ public class MainActivity extends AppCompatActivity {
                     else Toast.makeText(this, "Войдите для покупок", Toast.LENGTH_SHORT).show();
                 });
 
-                // Load and observe comments
                 viewModel.getClientInfo().observe(this, user -> {
                     String userId = user != null ? user.getId() : null;
-                    viewModel.getComments(product.getId()).observe(this, comments -> {
-                        commentsAdapter.setData(comments, userId, comment -> {
-                            viewModel.deleteComment(comment.getId());
-                            Toast.makeText(this, "Комментарий удалён", Toast.LENGTH_SHORT).show();
-                        });
-                    });
+                    viewModel.getComments(product.getId()).observe(this, comments -> commentsAdapter.setData(comments, userId, comment -> {
+                        viewModel.deleteComment(comment.getId());
+                        Toast.makeText(this, "Комментарий удалён", Toast.LENGTH_SHORT).show();
+                    }));
                 });
 
                 btnSendComment.setOnClickListener(v -> {
@@ -532,9 +523,7 @@ public class MainActivity extends AppCompatActivity {
             try (InputStream is = getAssets().open("images/logos/Big_logo.png")) {
                 Bitmap bitmap = BitmapFactory.decodeStream(is);
                 ivLogo.setImageBitmap(bitmap);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            } catch (IOException ignored) {}
         }
         view.findViewById(R.id.btn_about_to_catalog).setOnClickListener(v -> viewModel.navigateTo("CATALOG"));
         container.addView(view);

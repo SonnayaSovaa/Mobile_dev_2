@@ -50,7 +50,6 @@ public class BakeryRepositoryImpl implements BakeryRepository {
         this.sharedPreferences = context.getSharedPreferences("bakery_prefs", Context.MODE_PRIVATE);
         
         try {
-            // Check if Firebase is initialized before getting instance
             if (!FirebaseApp.getApps(context).isEmpty()) {
                 this.firebaseAuth = FirebaseAuth.getInstance();
             } else {
@@ -74,8 +73,8 @@ public class BakeryRepositoryImpl implements BakeryRepository {
         String name = sharedPreferences.getString("user_name", "Гость");
         String email = sharedPreferences.getString("user_email", "");
         String photo = sharedPreferences.getString("user_photo", "");
-        float rating = sharedPreferences.getFloat("user_rating", 5.0f);
-        clientInfo.postValue(new User(id, name, email, photo, 0, rating));
+        float rating = sharedPreferences.getFloat("user_rating", 5.00f);
+        clientInfo.postValue(new User(id, name, email, photo, 0, (double) rating));
     }
 
     @Override
@@ -91,13 +90,10 @@ public class BakeryRepositoryImpl implements BakeryRepository {
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful() && firebaseAuth.getCurrentUser() != null) {
                         FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
-                        User user = new User(firebaseUser.getUid(), "User", firebaseUser.getEmail(), "", 0, 5.0);
+                        User user = new User(firebaseUser.getUid(), "User", firebaseUser.getEmail(), "", 0, 5.00);
                         saveClientInfo(user);
                         result.setValue(true);
                     } else {
-                        // If configuration is not found, it's likely a setup issue, fall back to local
-                        Log.w(TAG, "Firebase Login failed (possibly missing config), falling back to local: " + 
-                                (task.getException() != null ? task.getException().getMessage() : "Unknown error"));
                         performLocalAuth(email, email.split("@")[0], result);
                     }
                 });
@@ -120,12 +116,10 @@ public class BakeryRepositoryImpl implements BakeryRepository {
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful() && firebaseAuth.getCurrentUser() != null) {
                         String uid = firebaseAuth.getCurrentUser().getUid();
-                        User user = new User(uid, nickname, email, "", 0, 5.0);
+                        User user = new User(uid, nickname, email, "", 0, 5.00);
                         saveClientInfo(user);
                         result.setValue(true);
                     } else {
-                        Log.w(TAG, "Firebase Registration failed, falling back to local: " + 
-                                (task.getException() != null ? task.getException().getMessage() : "Unknown error"));
                         performLocalAuth(email, nickname, result);
                     }
                 });
@@ -137,7 +131,7 @@ public class BakeryRepositoryImpl implements BakeryRepository {
 
     private void performLocalAuth(String email, String nickname, MutableLiveData<Boolean> result) {
         String uid = "local_" + Math.abs(email.hashCode());
-        User user = new User(uid, nickname, email, "", 0, 5.0);
+        User user = new User(uid, nickname, email, "", 0, 5.00);
         saveClientInfo(user);
         result.setValue(true);
     }
@@ -169,18 +163,19 @@ public class BakeryRepositoryImpl implements BakeryRepository {
 
     @Override
     public void saveClientInfo(User user) {
+        double roundedRating = Math.round(user.getRating() * 100.0) / 100.0;
         sharedPreferences.edit()
                 .putString("user_id", user.getId())
                 .putString("user_name", user.getNickname())
                 .putString("user_email", user.getEmail())
                 .putString("user_photo", user.getPhotoUrl())
-                .putFloat("user_rating", (float) user.getRating())
+                .putFloat("user_rating", (float) roundedRating)
                 .apply();
         loadClientInfo();
         if (user.getId() != null && !user.getId().startsWith("guest_")) {
             executor.execute(() -> {
                 try {
-                    bakeryDao.insertUser(new UserEntity(user.getId(), user.getNickname(), user.getEmail(), user.getPhotoUrl(), 0, user.getRating()));
+                    bakeryDao.insertUser(new UserEntity(user.getId(), user.getNickname(), user.getEmail(), user.getPhotoUrl(), 0, roundedRating));
                 } catch (Exception e) {
                     Log.e(TAG, "Error saving user to DB", e);
                 }
@@ -206,17 +201,20 @@ public class BakeryRepositoryImpl implements BakeryRepository {
 
     @Override
     public void updateUserRating(double delta) {
-        float currentRating = sharedPreferences.getFloat("user_rating", 5.0f);
-        float newRating = Math.max(0, Math.min(10, currentRating + (float) delta));
-        sharedPreferences.edit().putFloat("user_rating", newRating).apply();
+        float currentRating = sharedPreferences.getFloat("user_rating", 5.00f);
+        double newRating = Math.round((currentRating + delta) * 100.0) / 100.0;
+        newRating = Math.max(0.00, Math.min(10.00, newRating));
+        
+        sharedPreferences.edit().putFloat("user_rating", (float) newRating).apply();
         loadClientInfo();
         
         String userId = sharedPreferences.getString("user_id", "");
         if (!userId.isEmpty()) {
+            double finalRating = newRating;
             executor.execute(() -> {
                 UserEntity entity = bakeryDao.getUserByIdSync(userId);
                 if (entity != null) {
-                    entity.rating = newRating;
+                    entity.rating = finalRating;
                     bakeryDao.insertUser(entity);
                 }
             });
@@ -259,7 +257,7 @@ public class BakeryRepositoryImpl implements BakeryRepository {
         mediator.addSource(bakeryDao.getCommentsForProduct(productId), entities -> {
             if (entities != null) {
                 mediator.setValue(entities.stream()
-                        .map(e -> new Comment(e.id, e.text, e.userId, e.productId, e.userName, e.userPhotoUrl, e.date))
+                        .map(e -> new Comment(e.id, e.text, e.userId, e.productId, e.userName, e.userPhotoUrl, e.date, e.userRating))
                         .collect(Collectors.toList()));
             }
         });
@@ -275,7 +273,8 @@ public class BakeryRepositoryImpl implements BakeryRepository {
                     comment.getProductId(),
                     comment.getUserName(),
                     comment.getUserPhotoUrl(),
-                    comment.getDate()
+                    comment.getDate(),
+                    comment.getUserRating()
             ));
         });
     }

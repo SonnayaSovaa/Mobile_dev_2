@@ -4,132 +4,119 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="80dp"
-    android:background="@color/cream_bg"
-    android:gravity="center_horizontal">
+    android:padding="24dp"
+    android:background="#F5F5F5">
 
-    <com.google.android.material.imageview.ShapeableImageView
-        android:id="@+id/iv_avatar"
+    <androidx.cardview.widget.CardView
         android:layout_width="120dp"
         android:layout_height="120dp"
-        android:src="@android:drawable/sym_def_app_icon"
-        android:layout_marginTop="24dp"
-        android:background="@color/light_yellow"
-        android:padding="4dp"
-        android:scaleType="centerCrop"
-        android:clickable="true"
-        android:focusable="true"
-        android:foreground="?attr/selectableItemBackground"
-        app:shapeAppearanceOverlay="@style/CircleImageView" />
+        android:layout_gravity="center_horizontal"
+        app:cardCornerRadius="60dp"
+        app:cardElevation="4dp"
+        android:layout_marginBottom="24dp">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Нажмите, чтобы изменить фото"
-        android:textSize="12sp"
-        android:textColor="@color/gray_text"
-        android:layout_marginTop="8dp"/>
+        <ImageView
+            android:id="@+id/iv_avatar"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:src="@android:drawable/sym_def_app_icon"
+            android:contentDescription="Аватар пользователя" />
+    </androidx.cardview.widget.CardView>
 
-    <!-- Authorized view -->
+    <!-- Блок для авторизованного пользователя -->
     <LinearLayout
         android:id="@+id/layout_authorized"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:gravity="center_horizontal">
+        android:visibility="gone">
 
         <TextView
             android:id="@+id/tv_nickname"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Никнейм"
-            android:textSize="22sp"
+            android:textSize="24sp"
             android:textStyle="bold"
-            android:textColor="@color/dark_brown"
-            android:layout_marginTop="16dp"/>
+            android:textColor="#3E2723"
+            android:gravity="center" />
 
         <TextView
             android:id="@+id/tv_email"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="user@bakery.com"
+            android:text="email@example.com"
             android:textSize="16sp"
-            android:textColor="@color/gray_text"
-            android:layout_marginTop="4dp"/>
+            android:textColor="#795548"
+            android:gravity="center"
+            android:layout_marginBottom="16dp" />
 
-        <TextView
-            android:id="@+id/tv_rating"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Рейтинг: 5.0"
-            android:textSize="18sp"
-            android:textColor="@color/accent_brown"
-            android:layout_marginTop="8dp"
-            android:textStyle="bold"/>
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginBottom="24dp">
 
-        <TextView
-            android:id="@+id/tv_order_count"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Количество заказов: 0"
-            android:textSize="16sp"
-            android:textColor="@color/dark_brown"
-            android:layout_marginTop="8dp"
-            android:textStyle="italic"/>
+            <TextView
+                android:id="@+id/tv_rating"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Рейтинг: 5.00"
+                android:textSize="18sp"
+                android:textColor="#2E7D32"
+                android:textStyle="bold"
+                android:layout_marginEnd="24dp" />
+
+            <TextView
+                android:id="@+id/tv_order_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Заказов: 0"
+                android:textSize="18sp"
+                android:textColor="#3E2723" />
+        </LinearLayout>
 
         <Button
             android:id="@+id/btn_go_to_cart"
             android:layout_width="match_parent"
-            android:layout_height="54dp"
+            android:layout_height="wrap_content"
             android:text="Перейти в корзину"
-            android:textColor="@color/white"
-            android:backgroundTint="@color/dark_brown"
-            android:layout_marginTop="32dp"/>
+            android:backgroundTint="#8D6E63"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="12dp" />
 
         <Button
             android:id="@+id/btn_logout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Выйти из аккаунта"
+            android:text="Выйти"
             style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:textColor="@color/accent_brown"
-            android:layout_marginTop="8dp"/>
+            android:textColor="#D32F2F" />
     </LinearLayout>
 
-    <!-- Guest view -->
+    <!-- Блок для гостя -->
     <LinearLayout
         android:id="@+id/layout_guest"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:gravity="center_horizontal"
-        android:visibility="gone">
+        android:gravity="center">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Вы вошли как гость"
+            android:text="Вы зашли как гость"
             android:textSize="20sp"
-            android:textColor="@color/dark_brown"
-            android:layout_marginTop="16dp"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Чтобы совершать покупки, необходимо авторизоваться"
-            android:textSize="16sp"
-            android:textColor="@color/gray_text"
-            android:layout_marginTop="16dp"
-            android:gravity="center"/>
+            android:layout_marginBottom="16dp" />
 
         <Button
             android:id="@+id/btn_login_account"
             android:layout_width="match_parent"
-            android:layout_height="54dp"
+            android:layout_height="wrap_content"
             android:text="Войти в аккаунт"
-            android:textColor="@color/white"
-            android:backgroundTint="@color/dark_brown"
-            android:layout_marginTop="32dp"/>
+            android:backgroundTint="#5D4037" />
     </LinearLayout>
 
 </LinearLayout>

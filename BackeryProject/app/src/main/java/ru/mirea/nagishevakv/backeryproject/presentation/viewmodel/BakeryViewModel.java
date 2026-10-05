@@ -1,6 +1,7 @@
 package ru.mirea.nagishevakv.backeryproject.presentation.viewmodel;
 
 import android.app.Application;
+import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
@@ -36,6 +37,7 @@ import ru.mirea.nagishevakv.backeryproject.domain.usecase.RegisterUseCase;
 import ru.mirea.nagishevakv.backeryproject.presentation.ToxicityClassifier;
 
 public class BakeryViewModel extends AndroidViewModel {
+    private static final String TAG = "BakeryViewModel";
     private final BakeryRepository repository;
     private final LoginUseCase loginUseCase;
     private final RegisterUseCase registerUseCase;
@@ -47,17 +49,14 @@ public class BakeryViewModel extends AndroidViewModel {
     private final MutableLiveData<String> currentScreen = new MutableLiveData<>("CATALOG");
     private final MutableLiveData<Product> selectedProduct = new MutableLiveData<>();
     
-    // Weather & City sync
     private final MutableLiveData<String> selectedCity = new MutableLiveData<>("Выберите город");
     private final MutableLiveData<String> temperature = new MutableLiveData<>("");
     private final MutableLiveData<String> weatherDescription = new MutableLiveData<>("");
     
-    // Filters
     private final MutableLiveData<String> nameFilter = new MutableLiveData<>("");
     private final MutableLiveData<Double> maxPriceFilter = new MutableLiveData<>(Double.MAX_VALUE);
-    private final MutableLiveData<Integer> categoryFilter = new MutableLiveData<>(-1); // -1 for all
+    private final MutableLiveData<Integer> categoryFilter = new MutableLiveData<>(-1);
     
-    // Discount state
     private final MutableLiveData<Integer> discountCategoryId = new MutableLiveData<>(-1);
     private final MutableLiveData<String> discountKeyword = new MutableLiveData<>("");
 
@@ -79,6 +78,14 @@ public class BakeryViewModel extends AndroidViewModel {
         filteredProducts.addSource(nameFilter, filter -> applyFilters());
         filteredProducts.addSource(maxPriceFilter, filter -> applyFilters());
         filteredProducts.addSource(categoryFilter, filter -> applyFilters());
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        if (toxicityClassifier != null) {
+            toxicityClassifier.close();
+        }
     }
 
     private void applyFilters() {
@@ -104,7 +111,7 @@ public class BakeryViewModel extends AndroidViewModel {
     public void selectProduct(Product product) { selectedProduct.setValue(product); navigateTo("DETAIL"); }
     public LiveData<Boolean> login(String email, String password) { return loginUseCase.execute(email, password); }
     public void loginAsGuest() {
-        User guest = new User("guest_" + System.currentTimeMillis(), "Гость", "", "", 0, 5.0);
+        User guest = new User("guest_" + System.currentTimeMillis(), "Гость", "", "", 0, 5.00);
         repository.saveClientInfo(guest);
     }
     public boolean isAuthorized() { return repository.isAuthorized(); }
@@ -118,27 +125,27 @@ public class BakeryViewModel extends AndroidViewModel {
     public LiveData<List<Order>> getOrders() { return repository.getOrders(); }
 
     public LiveData<List<Comment>> getComments(int productId) { return repository.getComments(productId); }
+    
     public void postComment(int productId, String text) {
         User user = repository.getClientInfo().getValue();
         if (user == null || text.trim().isEmpty()) return;
         
-        // Анализ токсичности
-        double score = toxicityClassifier.getToxicityScore(text);
-        double delta;
-        if (score > 0.1) {
-            delta = -score;
-        } else if (score < -0.1) {
-            delta = -score;
-        } else {
-            delta = 0;
+        if (!toxicityClassifier.isReady()) {
+            Log.w(TAG, "ToxicityClassifier is not ready yet. Rating will not be updated.");
         }
         
+        double score = toxicityClassifier.getToxicityScore(text);
+        double delta = Math.round(-score * 100.0) / 100.0;
+        
+        Log.d(TAG, "Analysis for text: '" + text + "' -> Score: " + score + ", Delta: " + delta);
+
         if (delta != 0) {
+            Log.d(TAG, "Updating user rating by delta: " + delta);
             updateUserRating(delta);
         }
 
         String date = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(new Date());
-        Comment comment = new Comment(0, text, user.getId(), productId, user.getNickname(), user.getPhotoUrl(), date);
+        Comment comment = new Comment(0, text, user.getId(), productId, user.getNickname(), user.getPhotoUrl(), date, user.getRating());
         repository.addComment(comment);
     }
     
@@ -156,7 +163,6 @@ public class BakeryViewModel extends AndroidViewModel {
 
     public void addToCart(Product product) { manageCartUseCase.add(product); }
     public void removeFromCart(Product product) { manageCartUseCase.remove(product); }
-    public void delay(long ms) { try { Thread.sleep(ms); } catch (InterruptedException ignored) {} }
     public void clearCart() { manageCartUseCase.clear(); }
     public LiveData<Map<Product, Integer>> getCartItems() { return getCartUseCase.execute(); }
     public void checkout(double cost, int itemCount, String desc, String city) { repository.createOrder(cost, itemCount, desc, city); }
@@ -213,15 +219,15 @@ public class BakeryViewModel extends AndroidViewModel {
         String keyword = "";
 
         if (desc.contains("дожд") || desc.contains("rain")) {
-            catId = 1; // Выпечка
+            catId = 1;
         } else if (temp < 10) {
-            catId = 2; // Горячие напитки
+            catId = 2;
             keyword = "HOT"; 
         } else if (temp > 25) {
-            catId = 6; // Холодные напитки
+            catId = 6;
             keyword = "COLD";
         } else if (desc.contains("солн") || desc.contains("clear") || desc.contains("ясно")) {
-            catId = 5; // Десерты
+            catId = 5;
             keyword = "мороженое";
         }
         

@@ -8,8 +8,9 @@ public class Comment {
     private final String userName;
     private final String userPhotoUrl;
     private final String date;
+    private final double userRating;
 
-    public Comment(int id, String text, String userId, int productId, String userName, String userPhotoUrl, String date) {
+    public Comment(int id, String text, String userId, int productId, String userName, String userPhotoUrl, String date, double userRating) {
         this.id = id;
         this.text = text;
         this.userId = userId;
@@ -17,6 +18,7 @@ public class Comment {
         this.userName = userName;
         this.userPhotoUrl = userPhotoUrl;
         this.date = date;
+        this.userRating = userRating;
     }
 
     public int getId() { return id; }
@@ -26,4 +28,5 @@ public class Comment {
     public String getUserName() { return userName; }
     public String getUserPhotoUrl() { return userPhotoUrl; }
     public String getDate() { return date; }
+    public double getUserRating() { return userRating; }
 }
