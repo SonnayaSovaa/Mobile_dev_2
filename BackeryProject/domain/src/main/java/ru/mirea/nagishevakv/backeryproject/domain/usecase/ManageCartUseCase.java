@@ -1,12 +1,12 @@
 package ru.mirea.nagishevakv.backeryproject.domain.usecase;
 
 import ru.mirea.nagishevakv.backeryproject.domain.model.Product;
-import ru.mirea.nagishevakv.backeryproject.domain.repository.BakeryRepository;
+import ru.mirea.nagishevakv.backeryproject.domain.repository.ProductRepository;
 
 public class ManageCartUseCase {
-    private final BakeryRepository repository;
+    private final ProductRepository repository;
 
-    public ManageCartUseCase(BakeryRepository repository) {
+    public ManageCartUseCase(ProductRepository repository) {
         this.repository = repository;
     }
 

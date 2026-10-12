@@ -1,12 +1,12 @@
 package ru.mirea.nagishevakv.backeryproject.domain.usecase;
 
 import androidx.lifecycle.LiveData;
-import ru.mirea.nagishevakv.backeryproject.domain.repository.BakeryRepository;
+import ru.mirea.nagishevakv.backeryproject.domain.repository.UserRepository;
 
 public class RegisterUseCase {
-    private final BakeryRepository repository;
+    private final UserRepository repository;
 
-    public RegisterUseCase(BakeryRepository repository) {
+    public RegisterUseCase(UserRepository repository) {
         this.repository = repository;
     }
 

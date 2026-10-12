@@ -130,17 +130,10 @@ public class BakeryViewModel extends AndroidViewModel {
         User user = repository.getClientInfo().getValue();
         if (user == null || text.trim().isEmpty()) return;
         
-        if (!toxicityClassifier.isReady()) {
-            Log.w(TAG, "ToxicityClassifier is not ready yet. Rating will not be updated.");
-        }
-        
         double score = toxicityClassifier.getToxicityScore(text);
         double delta = Math.round(-score * 100.0) / 100.0;
         
-        Log.d(TAG, "Analysis for text: '" + text + "' -> Score: " + score + ", Delta: " + delta);
-
         if (delta != 0) {
-            Log.d(TAG, "Updating user rating by delta: " + delta);
             updateUserRating(delta);
         }
 
